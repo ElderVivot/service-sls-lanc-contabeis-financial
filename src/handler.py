@@ -7,7 +7,7 @@ try:
     import boto3
     import os
     from smart_open import open
-    from src.read_lines_and_processed import readLinesAndProcessed
+    from src.read_lines_and_processed import executeJobAsync
 except Exception as e:
     print("Error importing libraries", e)
 
@@ -28,7 +28,7 @@ def main(event, context):
 
         try:
             with open(f's3://{bucket}/{key}', 'r', encoding='cp1252', transport_params={"client": client}) as f:
-                readLinesAndProcessed(f)
+                executeJobAsync(f, key)
         except Exception:
             with open(f's3://{bucket}/{key}', 'r', transport_params={"client": client}) as f:
-                readLinesAndProcessed(f)
+                executeJobAsync(f, key)

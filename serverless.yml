@@ -13,6 +13,7 @@ provider:
     AWS_S3_ACCESS_KEY_ID: ${file(./env.json):AWS_S3_ACCESS_KEY_ID}
     AWS_S3_SECRET_ACCESS_KEY: ${file(./env.json):AWS_S3_SECRET_ACCESS_KEY}
     AWS_S3_REGION: ${file(./env.json):AWS_S3_REGION}
+    API_HOST_DE_PARA_ACCOUNT_ECD: ${file(./env.json):API_HOST_DE_PARA_ACCOUNT_ECD}
 
 plugins:
 - serverless-python-requirements
@@ -20,11 +21,7 @@ plugins:
 custom:
   pythonRequirements:
     dockerizeZip: true
-    layer:
-      name: py-smart_open_6_3_0
-      description: "Layer which contains smart_open==6.3.0 library to python"
-      compatibleRuntimes:
-        - python3.9
+    layer: true
 
 functions:
   processDeParaAccountECD:
