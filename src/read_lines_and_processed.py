@@ -16,6 +16,7 @@ except Exception as e:
     print(f"Error importing libraries {e}")
 
 API_HOST_DE_PARA_ACCOUNT_ECD = os.environ.get('API_HOST_DE_PARA_ACCOUNT_ECD')
+API_HOST_DB_RELATIONAL = os.environ.get('API_HOST_DB_RELATIONAL')
 
 dataToSave: Dict[str, Any] = {}
 dataToSave['accountsDePara'] = []
@@ -29,18 +30,58 @@ async def put(session: ClientSession, url: str, data: Any, headers: Dict[str, st
         return data, response.status
 
 
-async def saveData(data: Dict[str, Any]):
+async def post(session: ClientSession, url: str, data: Any, headers: Dict[str, str]):
+    async with session.post(url, json=data, headers=headers) as response:
+        data = await response.json()
+        return data, response.status
+
+
+async def saveData():
     try:
         async with ClientSession() as session:
             response, statusCode = await put(
                 session,
-                f"{API_HOST_DE_PARA_ACCOUNT_ECD}",
-                data=json.loads(json.dumps(data)),
+                f"{API_HOST_DE_PARA_ACCOUNT_ECD}/de-para-account-ecd",
+                data=json.loads(json.dumps(dataToSave)),
                 headers={}
             )
             if statusCode >= 400:
                 raise Exception(statusCode, response)
             print('Salvo no banco de dados')
+
+            await saveDataApiRelational()
+
+            return response
+    except Exception as e:
+        print('Error ao salvar dado')
+        print(e)
+
+
+async def saveDataApiRelational():
+    try:
+        urlS3 = f"https://autmais-ecd-de-para-accounting-plan.s3.us-east-2.amazonaws.com/{dataToSave['url']}"
+        async with ClientSession() as session:
+
+            response, statusCode = await post(
+                session,
+                f"{API_HOST_DB_RELATIONAL}/de_para_ecd_account_plan",
+                data={
+                    "nameCompanie": dataToSave['nameCompanie'],
+                    "federalRegistration": dataToSave['federalRegistration'],
+                    "startPeriod": dataToSave['startPeriod'],
+                    "endPeriod": dataToSave['endPeriod'],
+                    "urlFile": urlS3,
+                    "typeLog": "success",
+                    "messageLog": "SUCCESS",
+                    "messageLogToShowUser": "Sucesso ao processar",
+                    "messageError": ""
+                },
+                headers={"TENANT": dataToSave['tenant']}
+            )
+            if statusCode >= 400:
+                raise Exception(statusCode, response)
+            print('Salvo no banco de dados relacional')
+
             return response
     except Exception as e:
         print('Error ao salvar dado')
@@ -54,11 +95,21 @@ def getTenant(key: str):
         return ''
 
 
+def getId(key: str):
+    try:
+        return key.split('/')[1].replace('.txt', '')
+    except Exception:
+        return key
+
+
 def getDataFromIdentificador0000(lineSplit: List[str]):
-    dataToSave['startPeriod'] = treatDateField(lineSplit[3], 4)
-    dataToSave['endPeriod'] = treatDateField(lineSplit[4], 4)
-    dataToSave['nameCompanie'] = lineSplit[5]
-    dataToSave['federalRegistration'] = lineSplit[6]
+    try:
+        dataToSave['startPeriod'] = treatDateField(lineSplit[3], 4)
+        dataToSave['endPeriod'] = treatDateField(lineSplit[4], 4)
+        dataToSave['nameCompanie'] = lineSplit[5]
+        dataToSave['federalRegistration'] = lineSplit[6]
+    except Exception:
+        pass
 
 
 def getNameAccount(lineSplit: List[str]):
@@ -103,7 +154,8 @@ async def readLinesAndProcessed(f: io.TextIOWrapper, key: str):
     lastI150File = False
     isFileECD = False
 
-    dataToSave['id'] = key.replace('/', '__')
+    dataToSave['url'] = key
+    dataToSave['id'] = getId(key)
     dataToSave['tenant'] = getTenant(key)
     dataToSave['updatedAt'] = datetime.datetime.now().strftime(
         '%Y-%m-%d %H:%M:%S')
@@ -117,6 +169,8 @@ async def readLinesAndProcessed(f: io.TextIOWrapper, key: str):
                 isFileECD = checkIfIsFileECD(lineSplit)
                 if isFileECD is False:
                     print('Arquivo não é ECD')
+                    getDataFromIdentificador0000(lineSplit)
+                    await saveDataApiRelational()
                     break
 
             identificador = lineSplit[1]
@@ -147,7 +201,7 @@ async def readLinesAndProcessed(f: io.TextIOWrapper, key: str):
             print('Error ao processar arquivo TXT')
             print(e)
 
-    await saveData(dataToSave)
+    await saveData()
 
 
 def executeJobAsync(f: io.TextIOWrapper, key: str):

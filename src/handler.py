@@ -22,6 +22,7 @@ def main(event, context):
                           aws_secret_access_key=AWS_SECRET_ACCESS_KEY, region_name=REGION_NAME)
 
     for item in event.get("Records"):
+        print(item)
         s3 = item.get("s3")
         bucket = s3.get("bucket").get("name")
         key = s3.get("object").get("key")
