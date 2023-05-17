@@ -157,8 +157,9 @@ async def readLinesAndProcessed(f: io.TextIOWrapper, key: str):
     dataToSave['url'] = key
     dataToSave['id'] = getId(key)
     dataToSave['tenant'] = getTenant(key)
-    dataToSave['updatedAt'] = datetime.datetime.now().strftime(
-        '%Y-%m-%d %H:%M:%S')
+    dateTimeNow = datetime.datetime.now()
+    miliSecondsThreeChars = dateTimeNow.strftime('%f')[0:3]
+    dataToSave['updatedAt'] = f"{dateTimeNow.strftime('%Y-%m-%dT%H:%M:%S')}.{miliSecondsThreeChars}Z"
 
     while line := f.readline():
         try:
