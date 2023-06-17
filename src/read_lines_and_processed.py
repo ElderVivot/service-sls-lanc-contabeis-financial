@@ -11,11 +11,11 @@ try:
     from aiohttp import ClientSession
     from typing import Dict, Any, List
     import json
-    from src.functions import removeCharSpecials, treatDecimalField, treatDateField
+    from src.functions import returnDataInDictOrArray
 except Exception as e:
     print(f"Error importing libraries {e}")
 
-API_HOST_DE_PARA_ACCOUNT_ECD = os.environ.get('API_HOST_DE_PARA_ACCOUNT_ECD')
+API_HOST_SERVERLESS = os.environ.get('API_HOST_SERVERLESS')
 API_HOST_DB_RELATIONAL = os.environ.get('API_HOST_DB_RELATIONAL')
 
 
@@ -23,8 +23,6 @@ class ReadLinesAndProcessed(object):
     def __init__(self) -> None:
         self.__dataToSave: Dict[str, Any] = {}
         self.__dataToSave['accountsDePara'] = []
-        self.__accountsNameToCorrelation: Dict[str, str] = {}
-        self.__accountsTypeToCorrelation: Dict[str, str] = {}
 
     async def __put(self, session: ClientSession, url: str, data: Any, headers: Dict[str, str]):
         async with session.put(url, json=data, headers=headers) as response:
@@ -41,7 +39,7 @@ class ReadLinesAndProcessed(object):
             async with ClientSession() as session:
                 response, statusCode = await self.__put(
                     session,
-                    f"{API_HOST_DE_PARA_ACCOUNT_ECD}/de-para-account-ecd",
+                    f"{API_HOST_SERVERLESS}/lanc-contabeis-financial",
                     data=json.loads(json.dumps(self.__dataToSave)),
                     headers={}
                 )
@@ -63,10 +61,9 @@ class ReadLinesAndProcessed(object):
 
                 response, statusCode = await self.__post(
                     session,
-                    f"{API_HOST_DB_RELATIONAL}/de_para_ecd_account_plan",
+                    f"{API_HOST_DB_RELATIONAL}/lanc_contabil_financial",
                     data={
                         "nameCompanie": self.__dataToSave['nameCompanie'],
-                        "federalRegistration": self.__dataToSave['federalRegistration'],
                         "startPeriod": self.__dataToSave['startPeriod'],
                         "endPeriod": self.__dataToSave['endPeriod'],
                         "urlFile": urlS3,
@@ -98,109 +95,70 @@ class ReadLinesAndProcessed(object):
         except Exception:
             return key
 
-    def __getDataFromIdentificador0000(self, lineSplit: List[str]):
-        try:
-            self.__dataToSave['startPeriod'] = treatDateField(lineSplit[3], 4)
-            self.__dataToSave['endPeriod'] = treatDateField(lineSplit[4], 4)
-            self.__dataToSave['nameCompanie'] = lineSplit[5]
-            self.__dataToSave['federalRegistration'] = lineSplit[6]
-        except Exception:
-            pass
-
-    def __getNameAccount(self, lineSplit: List[str]):
-        try:
-            return self.__accountsNameToCorrelation[f'{lineSplit[2]}']
-        except Exception:
-            return ''
-
-    def __getTypeAccount(self, lineSplit: List[str]):
-        try:
-            return self.__accountsTypeToCorrelation[f'{lineSplit[2]}']
-        except Exception:
-            return ''
-
-    def __checkIfIsFileECD(self, lineSplit: List[str]):
-        if len(lineSplit) < 2:
-            return False
-        if lineSplit[1] == '0000':
-            field02 = lineSplit[2].upper()
-            if field02 != 'LECD':
-                return False
-        return True
-
-    def __getDataFromIdentificadorI155(self, lineSplit: List[str]):
-        balanceAccount = treatDecimalField(lineSplit[8])
-        typeAccount = self.__getTypeAccount(lineSplit)
-        oldAccount = lineSplit[2]
-
-        if len(oldAccount) > 6:
-            self.__dataToSave['codeOrClassification'] = 'classification'
-
-        if balanceAccount > 0 and typeAccount == 'A':
-            self.__dataToSave['accountsDePara'].append({
-                "oldAccount": oldAccount,
-                "newAccount": "",
-                "nameAccount": self.__getNameAccount(lineSplit),
-                "balanceAccount": treatDecimalField(lineSplit[8]),
-                "kindBalanceAccount": lineSplit[9]
-            })
-
-    async def __readLinesAndProcessed(self, f: io.TextIOWrapper, key: str):
-        lastI150File = False
-        isFileECD = False
-
+    async def __readLinesAndProcessed(self, dataFile: List[Any], key: str):
         self.__dataToSave['url'] = key
         self.__dataToSave['id'] = self.__getId(key)
         self.__dataToSave['tenant'] = self.__getTenant(key)
         dateTimeNow = datetime.datetime.now()
         miliSecondsThreeChars = dateTimeNow.strftime('%f')[0:3]
         self.__dataToSave['updatedAt'] = f"{dateTimeNow.strftime('%Y-%m-%dT%H:%M:%S')}.{miliSecondsThreeChars}Z"
-        self.__dataToSave['codeOrClassification'] = 'code'
+        self.__dataToSave['lancs'] = []
 
-        while line := f.readline():
+        isFileCorrect = False
+        nameSheetLineBefore = ''
+        bankAndAccount = ''
+        nameCompanie = ''
+
+        for _, data in enumerate(dataFile):
             try:
-                lineFormated = removeCharSpecials(line)
-                lineSplit = lineFormated.split('|')
+                nameSheet: str = returnDataInDictOrArray(data, [0])
+                field6: str = returnDataInDictOrArray(data, [6])
+                field7: str = returnDataInDictOrArray(data, [7])
 
-                if isFileECD is False:
-                    isFileECD = self.__checkIfIsFileECD(lineSplit)
-                    if isFileECD is False:
-                        print('Arquivo não é ECD')
-                        self.__getDataFromIdentificador0000(lineSplit)
-                        await self.__saveDataApiRelational()
-                        break
+                if nameSheetLineBefore != nameSheet:
+                    isFileCorrect = False
 
-                identificador = lineSplit[1]
+                if str(type(field6)).count('str') > 0 and field6.count('380 - EXTRATO FINANCEIRO') > 0:
+                    isFileCorrect = True
 
-                if identificador == '0000':
-                    endPeriod = lineSplit[4]
-                    self.__getDataFromIdentificador0000(lineSplit)
-                elif identificador == 'I050':
-                    self.__accountsNameToCorrelation[f'{lineSplit[6]}'] = lineSplit[8]
-                    self.__accountsTypeToCorrelation[f'{lineSplit[6]}'] = lineSplit[4]
-                elif identificador == 'I150':
-                    competenceEndI150 = lineSplit[3]
-                    if competenceEndI150 == endPeriod:
-                        lastI150File = True
-                    else:
-                        continue
-                elif identificador == 'I155' and lastI150File is True:
-                    self.__getDataFromIdentificadorI155(lineSplit)
-                elif identificador == 'I200':
-                    print('Terminou de processar todos registros do TXT')
-                    break
-                elif identificador == '9999':
-                    print('Arquivo sem reg de I200, processou completo TXT')
-                    break
-                else:
-                    continue
+                if isFileCorrect is True:
+                    if str(type(field6)).count('str') > 0 and field6.count('CONTA') > 0:
+                        bankAndAccount = field7
+
+                    if str(type(field6)).count('str') > 0 and field6.count('NOME FILIAL') > 0:
+                        nameCompanie = field7
+
+                    paymentDate = returnDataInDictOrArray(data, [3])
+                    amountReceived = returnDataInDictOrArray(data, [13])
+                    amountPaid = returnDataInDictOrArray(data, [14])
+
+                    if str(type(paymentDate)).count('datetime') > 0 and (amountPaid > 0 or amountReceived > 0):
+                        dataProcessed = {
+                            "bankAndAccount": bankAndAccount,
+                            "nameCompanie": nameCompanie,
+                            "dueDate": returnDataInDictOrArray(data, [1]),
+                            "paymentDate": paymentDate,
+                            "accountPlan": returnDataInDictOrArray(data, [5]),
+                            "nameProvider": returnDataInDictOrArray(data, [6]),
+                            "nameClient": returnDataInDictOrArray(data, [7]),
+                            "historic": returnDataInDictOrArray(data, [8]),
+                            "document": returnDataInDictOrArray(data, [12]),
+                            "amountReceived": amountReceived,
+                            "amountPaid": amountPaid,
+                            "accountDebit": '',
+                            "accountCredit": ''
+                        }
+                        self.__dataToSave['lancs'].append(dataProcessed.copy())
+                        dataProcessed.clear()
+
+                nameSheetLineBefore = nameSheet
             except Exception as e:
                 print('Error ao processar arquivo TXT')
                 print(e)
 
         await self.__saveData()
 
-    def executeJobMainAsync(self, f: io.TextIOWrapper, key: str):
+    def executeJobMainAsync(self, f: List[Any], key: str):
         try:
             asyncio.run(self.__readLinesAndProcessed(f, key))
         except Exception:

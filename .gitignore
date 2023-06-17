@@ -22,3 +22,8 @@ env.json
 .serverless
 
 node_modules/
+
+*.xlsx
+*.xls
+test.py
+__pycache__

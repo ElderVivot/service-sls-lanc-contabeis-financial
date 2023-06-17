@@ -4,10 +4,11 @@ except ImportError:
     pass
 
 try:
+    import io
     import boto3
     import os
-    from smart_open import open
     from src.read_lines_and_processed import ReadLinesAndProcessed
+    from src.functions import readExcelPandas
 except Exception as e:
     print("Error importing libraries", e)
 
@@ -18,18 +19,16 @@ REGION_NAME = os.environ.get('AWS_S3_REGION')
 
 def main(event, context):
 
-    client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID,
-                          aws_secret_access_key=AWS_SECRET_ACCESS_KEY, region_name=REGION_NAME)
+    client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY, region_name=REGION_NAME)
 
     for item in event.get("Records"):
         print(item)
         s3 = item.get("s3")
         bucket = s3.get("bucket").get("name")
         key = s3.get("object").get("key")
+        fileObj = client.get_object(Bucket=bucket, Key=key)
+        fileContent = fileObj['Body'].read()
+        fileBytesIO = io.BytesIO(fileContent)
 
-        try:
-            with open(f's3://{bucket}/{key}', 'r', encoding='cp1252', transport_params={"client": client}) as f:
-                ReadLinesAndProcessed().executeJobMainAsync(f, key)
-        except Exception:
-            with open(f's3://{bucket}/{key}', 'r', transport_params={"client": client}) as f:
-                ReadLinesAndProcessed().executeJobMainAsync(f, key)
+        data = readExcelPandas(fileBytesIO)
+        ReadLinesAndProcessed().executeJobMainAsync(data, key)
