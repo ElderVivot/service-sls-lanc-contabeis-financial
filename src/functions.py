@@ -186,6 +186,15 @@ def identifiesAndTransformTypeDataOfSeriesPandas(data):
     return newData
 
 
+def formatDate(valueDate: datetime.date, format='%Y-%m-%d'):
+    try:
+        if str(type(valueDate)).find('datetime') >= 0:
+            return valueDate.strftime(format)
+    except Exception:
+        return valueDate
+    return valueDate
+
+
 def readExcelPandas(filePath: str, nameSheetToFilter=''):
     listOfDataAllRows = []
     dataOfRow = []

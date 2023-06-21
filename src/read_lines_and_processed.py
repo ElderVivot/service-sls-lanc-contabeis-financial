@@ -4,14 +4,13 @@ except ImportError:
     pass
 
 try:
-    import io
     import os
     import asyncio
     import datetime
     from aiohttp import ClientSession
     from typing import Dict, Any, List
     import json
-    from src.functions import returnDataInDictOrArray
+    from src.functions import returnDataInDictOrArray, formatDate
 except Exception as e:
     print(f"Error importing libraries {e}")
 
@@ -22,7 +21,6 @@ API_HOST_DB_RELATIONAL = os.environ.get('API_HOST_DB_RELATIONAL')
 class ReadLinesAndProcessed(object):
     def __init__(self) -> None:
         self.__dataToSave: Dict[str, Any] = {}
-        self.__dataToSave['accountsDePara'] = []
 
     async def __put(self, session: ClientSession, url: str, data: Any, headers: Dict[str, str]):
         async with session.put(url, json=data, headers=headers) as response:
@@ -36,6 +34,8 @@ class ReadLinesAndProcessed(object):
 
     async def __saveData(self, ):
         try:
+            self.__dataToSave['startPeriod'] = formatDate(self.__dataToSave['startPeriod'])
+            self.__dataToSave['endPeriod'] = formatDate(self.__dataToSave['endPeriod'])
             async with ClientSession() as session:
                 response, statusCode = await self.__put(
                     session,
@@ -91,7 +91,7 @@ class ReadLinesAndProcessed(object):
 
     def __getId(self, key: str):
         try:
-            return key.split('/')[1].replace('.txt', '')
+            return key.split('/')[1].split('.')[0]
         except Exception:
             return key
 
@@ -102,6 +102,8 @@ class ReadLinesAndProcessed(object):
         dateTimeNow = datetime.datetime.now()
         miliSecondsThreeChars = dateTimeNow.strftime('%f')[0:3]
         self.__dataToSave['updatedAt'] = f"{dateTimeNow.strftime('%Y-%m-%dT%H:%M:%S')}.{miliSecondsThreeChars}Z"
+        self.__dataToSave['startPeriod'] = ''
+        self.__dataToSave['endPeriod'] = ''
         self.__dataToSave['lancs'] = []
 
         isFileCorrect = False
@@ -122,29 +124,43 @@ class ReadLinesAndProcessed(object):
                     isFileCorrect = True
 
                 if isFileCorrect is True:
-                    if str(type(field6)).count('str') > 0 and field6.count('CONTA') > 0:
+                    if str(type(field6)).count('str') > 0 and field6.count('CONTA:') > 0:
                         bankAndAccount = field7
 
                     if str(type(field6)).count('str') > 0 and field6.count('NOME FILIAL') > 0:
                         nameCompanie = field7
+                        self.__dataToSave['nameCompanie'] = nameCompanie
 
                     paymentDate = returnDataInDictOrArray(data, [3])
+                    nameProvider = returnDataInDictOrArray(data, [6])
+                    nameClient = returnDataInDictOrArray(data, [7])
                     amountReceived = returnDataInDictOrArray(data, [13])
                     amountPaid = returnDataInDictOrArray(data, [14])
 
                     if str(type(paymentDate)).count('datetime') > 0 and (amountPaid > 0 or amountReceived > 0):
+                        if self.__dataToSave['startPeriod'] == '':
+                            self.__dataToSave['startPeriod'] = paymentDate
+                        if self.__dataToSave['endPeriod'] == '':
+                            self.__dataToSave['endPeriod'] = paymentDate
+                        if self.__dataToSave['startPeriod'] > paymentDate:
+                            self.__dataToSave['startPeriod'] = paymentDate
+                        if self.__dataToSave['endPeriod'] < paymentDate:
+                            self.__dataToSave['endPeriod'] = paymentDate
+
                         dataProcessed = {
                             "bankAndAccount": bankAndAccount,
                             "nameCompanie": nameCompanie,
-                            "dueDate": returnDataInDictOrArray(data, [1]),
-                            "paymentDate": paymentDate,
+                            "dueDate": formatDate(returnDataInDictOrArray(data, [1]), '%d/%m/%Y'),
+                            "paymentDate": formatDate(paymentDate, '%d/%m/%Y'),
                             "accountPlan": returnDataInDictOrArray(data, [5]),
-                            "nameProvider": returnDataInDictOrArray(data, [6]),
-                            "nameClient": returnDataInDictOrArray(data, [7]),
+                            "nameProvider": nameProvider,
+                            "nameClient": nameClient,
+                            "nameProviderClient": nameProvider if nameProvider != "" else nameClient,
                             "historic": returnDataInDictOrArray(data, [8]),
                             "document": returnDataInDictOrArray(data, [12]),
                             "amountReceived": amountReceived,
                             "amountPaid": amountPaid,
+                            "amountMoviment": amountReceived if amountReceived > 0 else amountPaid * -1,
                             "accountDebit": '',
                             "accountCredit": ''
                         }
