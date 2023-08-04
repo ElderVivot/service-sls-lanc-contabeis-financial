@@ -26,9 +26,13 @@ def main(event, context):
         s3 = item.get("s3")
         bucket = s3.get("bucket").get("name")
         key = s3.get("object").get("key")
+        extension = key.split('.')[1]
         fileObj = client.get_object(Bucket=bucket, Key=key)
         fileContent = fileObj['Body'].read()
         fileBytesIO = io.BytesIO(fileContent)
 
-        data = readExcelPandas(fileBytesIO)
+        if extension in ('xlsx', 'xls'):
+            data = readExcelPandas(fileBytesIO)
+        else:
+            data = []
         ReadLinesAndProcessed().executeJobMainAsync(data, key)

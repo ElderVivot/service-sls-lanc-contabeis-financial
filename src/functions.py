@@ -5,12 +5,16 @@ except ImportError:
 
 try:
     import unicodedata
+    import logging
     import re
     import datetime
     import pandas
     from typing import Any, List
+    from validate_docbr import CNPJ, CPF
 except Exception as e:
     print("Error importing libraries", e)
+
+logger = logging.getLogger(__name__)
 
 
 def minimalizeSpaces(text: str):
@@ -37,8 +41,6 @@ def searchPositionFieldForName(header, nameField=''):
 
 
 def analyzeIfFieldHasPositionInFileEnd(data, positionInFile, positionInFileEnd):
-    positionInFile = positionInFile - 1
-
     try:
         if positionInFileEnd <= 0:
             return data[positionInFile]
@@ -88,14 +90,44 @@ def treatDecimalField(value, numberOfDecimalPlaces=2, decimalSeparator=','):
         return float(0)
 
 
+def treatDecimalFieldInVector(data, numberOfField=0, fieldsHeader=[], nameFieldHeader='', row='main', positionInFileEnd=0):
+    """
+    :param data: Informar o array de dados que quer ler
+    :param numberOfField: numero do campo na planilha (opcional)
+    :param fieldsHeader: linha do cabeçalho armazenado num vetor (opcional)
+    :param nameFieldHeader: nome do cabeçalho que é pra buscar (opcional)
+    :param row: este serve pra caso não seja um pagamento que esteja na linha principal (que não tem cabeçalho, então pegar apenas pelo número do campo). O valor 'main' quer dizer que tá numa linha que pode ter cabeçalho
+    :return: retorna um campo como decimal
+    """
+    if len(fieldsHeader) > 0 and nameFieldHeader is not None and nameFieldHeader != "":
+        try:
+            if row == 'main':
+                return treatDecimalField(data[searchPositionFieldForName(fieldsHeader, nameFieldHeader)])
+            else:
+                return treatDecimalField(analyzeIfFieldHasPositionInFileEnd(data, numberOfField, positionInFileEnd))
+        except Exception:
+            try:
+                return treatDecimalField(analyzeIfFieldHasPositionInFileEnd(data, numberOfField, positionInFileEnd))
+            except Exception:
+                return float(0)
+    else:
+        try:
+            return treatDecimalField(analyzeIfFieldHasPositionInFileEnd(data, numberOfField, positionInFileEnd))
+        except Exception:
+            return float(0)
+
+
 def treatDateField(valorCampo, formatoData=1):
     """
     :param valorCampo: Informar o campo string que será transformado para DATA
     :param formatoData: 1 = 'DD/MM/YYYY' ; 2 = 'YYYY-MM-DD' ; 3 = 'YYYY/MM/DD' ; 4 = 'DDMMYYYY'
     :return: retorna como uma data. Caso não seja uma data válida irá retornar None
     """
-    if type(valorCampo) == 'datetime.date':
+    if type(valorCampo) == 'datetime.date' or type(valorCampo) == 'datetime.datetime':
         return valorCampo
+
+    if isinstance(valorCampo, datetime.datetime):
+        return valorCampo.date()
 
     valorCampo = str(valorCampo).strip()
 
@@ -115,9 +147,37 @@ def treatDateField(valorCampo, formatoData=1):
         valorCampo = valorCampo[0:6] + '20' + valorCampo[6:]
 
     try:
-        return datetime.datetime.strptime(valorCampo[:lengthField], formatoDataStr).strftime('%Y-%m-%d %H:%M:%S')
+        return datetime.datetime.strptime(valorCampo[:lengthField], formatoDataStr)
     except ValueError:
         return None
+
+
+def treatDateFieldInVector(data, numberOfField=0, fieldsHeader=[], nameFieldHeader='', formatoData=1, row='main', positionInFileEnd=0):
+    """
+    :param data: Informar o array de dados que quer ler
+    :param numberOfField: numero do campo na planilha (opcional)
+    :param fieldsHeader: linha do cabeçalho armazenado num vetor (opcional)
+    :param nameFieldHeader: nome do cabeçalho que é pra buscar (opcional)
+    :param formatoData: 1 = 'DD/MM/YYYY' ; 2 = 'YYYY-MM-DD (opcional)
+    :param row: este serve pra caso não seja um pagamento que esteja na linha principal (que não tem cabeçalho, então pegar apenas pelo número do campo). O valor 'main' quer dizer que tá numa linha que pode ter cabeçalho
+    :return: retorna um campo como decimal
+    """
+    if len(fieldsHeader) > 0 and nameFieldHeader is not None and nameFieldHeader != "":
+        try:
+            if row == 'main':
+                return treatDateField(data[searchPositionFieldForName(fieldsHeader, nameFieldHeader)], formatoData)
+            else:
+                return treatDateField(analyzeIfFieldHasPositionInFileEnd(data, numberOfField, positionInFileEnd), formatoData)
+        except Exception:
+            try:
+                return treatDateField(analyzeIfFieldHasPositionInFileEnd(data, numberOfField, positionInFileEnd), formatoData)
+            except Exception:
+                return None
+    else:
+        try:
+            return treatDateField(analyzeIfFieldHasPositionInFileEnd(data, numberOfField, positionInFileEnd), formatoData)
+        except Exception:
+            return None
 
 
 def treatTextField(value: str):
@@ -125,6 +185,32 @@ def treatTextField(value: str):
         return minimalizeSpaces(removeCharSpecials(value.strip().upper()))
     except Exception:
         return ""
+
+
+def treatTextFieldInVector(data, numberOfField=0, fieldsHeader=[], nameFieldHeader='', positionInFileEnd=0, keepTextOriginal=True):
+    """
+    :param data: Informar o array de dados que quer ler
+    :param numberOfField: numero do campo na planilha (opcional)
+    :param fieldsHeader: linha do cabeçalho armazenado num vetor (opcional)
+    :param nameFieldHeader: nome do cabeçalho que é pra buscar (opcional)
+    :return: retorna um campo como texto, retirando acentos, espaços excessivos, etc
+    """
+    if len(fieldsHeader) > 0 and nameFieldHeader is not None and nameFieldHeader != "":
+        try:
+            value = data[searchPositionFieldForName(fieldsHeader, nameFieldHeader)]
+            return treatTextField(value) if keepTextOriginal is True else value
+        except Exception:
+            try:
+                value = analyzeIfFieldHasPositionInFileEnd(data, numberOfField, positionInFileEnd)
+                return treatTextField(value) if keepTextOriginal is True else value
+            except Exception:
+                return ""
+    else:
+        try:
+            value = analyzeIfFieldHasPositionInFileEnd(data, numberOfField, positionInFileEnd)
+            return treatTextField(value) if keepTextOriginal is True else value
+        except Exception:
+            return ""
 
 
 def treatNumberField(value, isInt=False):
@@ -168,6 +254,114 @@ def treatNumberFieldInVector(data, numberOfField=-1, fieldsHeader=[], nameFieldH
             return 0
 
 
+def formatDate(valueDate: datetime.date, format='%Y-%m-%d'):
+    try:
+        if str(type(valueDate)).find('datetime') >= 0:
+            return valueDate.strftime(format)
+    except Exception:
+        return valueDate
+    return valueDate
+
+
+def removeAnArrayFromWithinAnother(arraySet=[]):
+    newArray = []
+    try:
+        for array in arraySet:
+            if array is None:
+                continue
+            for vector in array:
+                if len(vector) == 0:
+                    continue
+                newArray.append(vector)
+    except Exception:
+        pass
+    return newArray
+
+
+def returnBankForNumber(numberBank):
+    numberBankOriginal = numberBank
+    numberBank = treatNumberField(numberBank, True)
+    nameBank = ""
+    if numberBank == 1:
+        nameBank = 'BRASIL'
+    elif numberBank == 3:
+        nameBank = 'AMAZONIA'
+    elif numberBank == 237:
+        nameBank = 'BRADESCO'
+    elif numberBank == 104:
+        nameBank = 'CEF'
+    elif numberBank == 756:
+        nameBank = 'SICOOB'
+    elif numberBank == 748:
+        nameBank = 'SICRED'
+    elif numberBank == 33:
+        nameBank = 'SANTANDER'
+    elif numberBank == 341:
+        nameBank = 'ITAU'
+    elif numberBank == 743:
+        nameBank = 'SEMEAR'
+    elif numberBank == 422:
+        nameBank = 'SAFRA'
+    elif numberBank == 637:
+        nameBank = 'SOFISA'
+    elif numberBank == 4:
+        nameBank = 'NORDESTE'
+    elif numberBank == 218:
+        nameBank = 'BS2'
+    elif numberBank == 634:
+        nameBank = 'TRIANGULO'
+    elif numberBank == 41:
+        nameBank = 'BANRISUL'
+    elif numberBank == 70:
+        nameBank = 'BRB'
+    elif numberBank == 82:
+        nameBank = 'TOPAZIO'
+    elif numberBank == 260:
+        nameBank = 'NUBANK'
+    elif numberBank == 336:
+        nameBank = 'C6'
+    else:
+        nameBank = str(numberBankOriginal)
+
+    return nameBank
+
+
+def returnBankForName(nameBank):
+    nameBank = str(nameBank)
+    if nameBank.count('BRASIL') > 0:
+        nameBank = 'BRASIL'
+    elif nameBank.count('BRADESCO') > 0:
+        nameBank = 'BRADESCO'
+    elif (nameBank.count('CAIXA') > 0 and (nameBank.count('ECON') > 0 or nameBank.count('AG.') > 0 or nameBank.count('FEDERAL') > 0)) or nameBank.count('CEF') > 0:
+        nameBank = 'CEF'
+    elif nameBank.count('SICOOB') > 0:
+        nameBank = 'SICOOB'
+    elif nameBank.count('SICRED') > 0:
+        nameBank = 'SICRED'
+    elif nameBank.count('SANTANDER') > 0:
+        nameBank = 'SANTANDER'
+    elif nameBank.count('ITAU') > 0:
+        nameBank = 'ITAU'
+    elif nameBank.count('SAFRA') > 0:
+        nameBank = 'SAFRA'
+    elif nameBank.count('DINHEIRO') > 0:
+        nameBank = 'DINHEIRO'
+    else:
+        nameBank = nameBank
+
+    return nameBank
+
+
+def validateCPF(value):
+    cpf = CPF()
+    return cpf.validate(value)
+
+
+def validateCNPJ(value):
+    cnpj = CNPJ()
+    return cnpj.validate(value)
+
+
 def identifiesAndTransformTypeDataOfSeriesPandas(data):
     newData = ''
     typeData = str(type(data))
@@ -186,15 +380,6 @@ def identifiesAndTransformTypeDataOfSeriesPandas(data):
     return newData
 
 
-def formatDate(valueDate: datetime.date, format='%Y-%m-%d'):
-    try:
-        if str(type(valueDate)).find('datetime') >= 0:
-            return valueDate.strftime(format)
-    except Exception:
-        return valueDate
-    return valueDate
-
-
 def readExcelPandas(filePath: str, nameSheetToFilter=''):
     listOfDataAllRows = []
     dataOfRow = []
@@ -203,21 +388,24 @@ def readExcelPandas(filePath: str, nameSheetToFilter=''):
         sheetNames = pandas.ExcelFile(filePath).sheet_names
 
         for sheet in sheetNames:
-            if nameSheetToFilter == '' or sheet == nameSheetToFilter:
-                dataFrame = pandas.read_excel(filePath, sheet_name=sheet, header=None)
-                dataFrameDropNa = dataFrame.dropna(how='all')
-                dataFrameFillNa = dataFrameDropNa.fillna('')
-                dataFrameToRecords = dataFrameFillNa.to_records(index=False)
-                for dataRow in dataFrameToRecords:
-                    dataOfRow.append(sheet)
-                    for data in dataRow:
-                        newData = identifiesAndTransformTypeDataOfSeriesPandas(data)
-                        dataOfRow.append(newData)
+            try:
+                if nameSheetToFilter == '' or sheet == nameSheetToFilter:
+                    dataFrame = pandas.read_excel(filePath, sheet_name=sheet, header=None)
+                    dataFrameDropNa = dataFrame.dropna(how='all')
+                    dataFrameFillNa = dataFrameDropNa.fillna('')
+                    dataFrameToRecords = dataFrameFillNa.to_records(index=False)
+                    for dataRow in dataFrameToRecords:
+                        dataOfRow.append(sheet)
+                        for data in dataRow:
+                            newData = identifiesAndTransformTypeDataOfSeriesPandas(data)
+                            dataOfRow.append(newData)
 
-                    listOfDataAllRows.append(dataOfRow.copy())
-                    dataOfRow.clear()
+                        listOfDataAllRows.append(dataOfRow.copy())
+                        dataOfRow.clear()
+            except Exception as e:
+                logger.exception(e)
 
     except Exception as e:
-        print(e)
+        logger.exception(e)
 
     return listOfDataAllRows
