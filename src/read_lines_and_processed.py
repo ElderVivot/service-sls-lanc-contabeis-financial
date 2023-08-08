@@ -74,18 +74,18 @@ class ReadLinesAndProcessed(object):
         }
 
     async def __readLinesAndProcessed(self, dataFile: List[Any], key: str):
-        try:
-            self.__dataToSave['url'] = key
-            self.__dataToSave['id'] = self.__getId(key)
-            self.__dataToSave['tenant'] = self.__getTenant(key)
-            self.__dataToSave['idCompanie'] = self.__getIdCompanie(key)
-            dateTimeNow = datetime.datetime.now()
-            miliSecondsThreeChars = dateTimeNow.strftime('%f')[0:3]
-            self.__dataToSave['updatedAt'] = f"{dateTimeNow.strftime('%Y-%m-%dT%H:%M:%S')}.{miliSecondsThreeChars}Z"
-            self.__dataToSave['startPeriod'] = ''
-            self.__dataToSave['endPeriod'] = ''
-            self.__dataToSave['lancs']: List[Dict[str, Any]] = []
+        self.__dataToSave['url'] = key
+        self.__dataToSave['id'] = self.__getId(key)
+        self.__dataToSave['tenant'] = self.__getTenant(key)
+        self.__dataToSave['idCompanie'] = self.__getIdCompanie(key)
+        dateTimeNow = datetime.datetime.now()
+        miliSecondsThreeChars = dateTimeNow.strftime('%f')[0:3]
+        self.__dataToSave['updatedAt'] = f"{dateTimeNow.strftime('%Y-%m-%dT%H:%M:%S')}.{miliSecondsThreeChars}Z"
+        self.__dataToSave['startPeriod'] = ''
+        self.__dataToSave['endPeriod'] = ''
+        self.__dataToSave['lancs']: List[Dict[str, Any]] = []
 
+        try:
             getLayout = GetLayout()
             settingsLayout = await getLayout.getDataCompanieXSettingLayout(self.__dataToSave['idCompanie'])
             settingsLayout = returnDataInDictOrArray(settingsLayout, ['Item'], None)
@@ -163,9 +163,21 @@ class ReadLinesAndProcessed(object):
 
             self.__dataToSave['lancs'] = removeAnArrayFromWithinAnother(self.__dataToSave['lancs'])
 
+            self.__dataToSave['typeLog'] = 'success'
+            self.__dataToSave['messageLog'] = 'SUCCESS'
+            self.__dataToSave['messageLogToShowUser'] = 'Sucesso ao processar'
+            if len(self.__dataToSave['lancs']) == 0:
+                self.__dataToSave['typeLog'] = 'success'
+                self.__dataToSave['messageLog'] = 'SUCCESS'
+                self.__dataToSave['messageLogToShowUser'] = 'Processou com sucesso, mas não encontrou nenhuma linha válida no arquivo pra lançamento contábil, revise o layout.'
             saveData = SaveData(self.__dataToSave)
             await saveData.saveData()
         except Exception as e:
+            self.__dataToSave['typeLog'] = 'error'
+            self.__dataToSave['messageLog'] = str(e)
+            self.__dataToSave['messageLogToShowUser'] = 'Erro ao processar, entre em contato com suporte'
+            saveData = SaveData(self.__dataToSave)
+            await saveData.saveData()
             logger.exception(e)
 
     def executeJobMainAsync(self, f: List[Any], key: str):

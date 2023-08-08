@@ -25,13 +25,7 @@ class SaveData(object):
             data = await response.json()
             return data, response.status
 
-    async def __post(self, session: ClientSession, url: str, data: Any, headers: Dict[str, str]):
-        async with session.post(url, json=data, headers=headers) as response:
-            data = await response.json()
-            return data, response.status
-
     async def saveData(self, ):
-        print(self.__dataToSave)
         try:
             self.__dataToSave['startPeriod'] = formatDate(self.__dataToSave['startPeriod'])
             self.__dataToSave['endPeriod'] = formatDate(self.__dataToSave['endPeriod'])
@@ -52,12 +46,16 @@ class SaveData(object):
         except Exception as e:
             print('Error ao salvar dado dynamodb')
             print(e)
+            self.__dataToSave['typeLog'] = 'error'
+            self.__dataToSave['messageLog'] = str(e)
+            self.__dataToSave['messageLogToShowUser'] = 'Erro ao salvar resultado do processamento'
+
+            await self.__saveDataApiRelational()
 
     async def __saveDataApiRelational(self):
         try:
-            urlS3 = f"https://autmais-ecd-de-para-accounting-plan.s3.us-east-2.amazonaws.com/{self.__dataToSave['url']}"
+            urlS3 = f"https://cont-financial-files.s3.us-east-2.amazonaws.com/{self.__dataToSave['url']}"
             async with ClientSession() as session:
-
                 response, statusCode = await self.__put(
                     session,
                     f"{API_HOST_DB_RELATIONAL}/lanc_contabil_financial/{self.__dataToSave['id']}",
@@ -67,9 +65,9 @@ class SaveData(object):
                         "startPeriod": "2023-05-01",
                         "endPeriod": "2023-05-31",
                         "urlFile": urlS3,
-                        "typeLog": "success",
-                        "messageLog": "SUCCESS",
-                        "messageLogToShowUser": "Sucesso ao processar",
+                        "typeLog": self.__dataToSave['typeLog'],
+                        "messageLog": self.__dataToSave['messageLog'],
+                        "messageLogToShowUser": self.__dataToSave['messageLogToShowUser'],
                         "messageError": ""
                     },
                     headers={"TENANT": self.__dataToSave['tenant']}
