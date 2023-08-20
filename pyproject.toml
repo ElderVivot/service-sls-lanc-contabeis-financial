@@ -13,6 +13,7 @@ xlrd = "^2.0.1"
 pandas = "^2.0.2"
 openpyxl = "^3.1.2"
 validate-docbr = "^1.10.0"
+python-dotenv = "^1.0.0"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.2.0"

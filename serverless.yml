@@ -11,14 +11,6 @@ provider:
   region: us-east-2
   memorySize: 512
   timeout: 60
-  environment:
-    AWS_S3_ACCESS_KEY_ID: ${file(./env.json):AWS_S3_ACCESS_KEY_ID}
-    AWS_S3_SECRET_ACCESS_KEY: ${file(./env.json):AWS_S3_SECRET_ACCESS_KEY}
-    AWS_S3_REGION: ${file(./env.json):AWS_S3_REGION}
-    API_HOST_SERVERLESS: ${file(./env.json):API_HOST_SERVERLESS}
-    API_HOST_DB_RELATIONAL: ${file(./env.json):API_HOST_DB_RELATIONAL}
-    API_HOST_SERVERLESS_COMPANIE_X_SETTING_LAYOUT: ${file(./env.json):API_HOST_SERVERLESS_COMPANIE_X_SETTING_LAYOUT}
-    API_HOST_SERVERLESS_SETTING_LAYOUT_FINANCIAL: ${file(./env.json):API_HOST_SERVERLESS_SETTING_LAYOUT_FINANCIAL}
 
 plugins:
   - serverless-python-requirements

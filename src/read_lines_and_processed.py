@@ -27,6 +27,7 @@ try:
     from src.treat_data.validate_if_cnpj_or_cpf_is_valid import validateIfCnpjOrCpfIsValid
     from src.treat_data.check_if_is_duplicated_fields import checkIfItIsDuplicatedFields
     from src.treat_data.handle_layout_is_partida_multipla import handleLayoutIsPartidaMultipla
+    from src.treat_data.check_columns_that_have_value import getListColumnsThatHaveValue
 except Exception as e:
     print(f"Error importing libraries {e}")
 
@@ -73,6 +74,17 @@ class ReadLinesAndProcessed(object):
             "positiveIsAmountReceived": False
         }
 
+    def __updateDateStartAndDateEnd(self, dateMovement: datetime.datetime):
+        if self.__dataToSave['startPeriod'] == '':
+            self.__dataToSave['startPeriod'] = dateMovement
+        if self.__dataToSave['startPeriod'] > dateMovement:
+            self.__dataToSave['startPeriod'] = dateMovement
+
+        if self.__dataToSave['endPeriod'] == '':
+            self.__dataToSave['endPeriod'] = dateMovement
+        if self.__dataToSave['endPeriod'] < dateMovement:
+            self.__dataToSave['endPeriod'] = dateMovement
+
     async def __readLinesAndProcessed(self, dataFile: List[Any], key: str):
         self.__dataToSave['url'] = key
         self.__dataToSave['id'] = self.__getId(key)
@@ -84,6 +96,7 @@ class ReadLinesAndProcessed(object):
         self.__dataToSave['startPeriod'] = ''
         self.__dataToSave['endPeriod'] = ''
         self.__dataToSave['lancs']: List[Dict[str, Any]] = []
+        self.__dataToSave['listOfColumnsThatHaveValue']: List[str] = []
 
         try:
             getLayout = GetLayout()
@@ -137,15 +150,17 @@ class ReadLinesAndProcessed(object):
 
                             valuesOfLine = correlationBankAndAccountBetweenSettingsAndClient(valuesOfLine, bankAndAccountCorrelation)
 
-                            valuesOfLine['cgceProvider'] = validateIfCnpjOrCpfIsValid(valuesOfLine, dataSetting)
+                            valuesOfLine['cgceProviderClient'] = validateIfCnpjOrCpfIsValid(valuesOfLine, dataSetting)
 
                             isValid = isValidLineToPrint(valuesOfLine, dataSetting)
                             isValidDataCompanie = isValidDataThisCompanie(valuesOfLine, validateIfDataIsThisCompanie, bankAndAccountCorrelation)
                             if isValid is True and isValidDataCompanie is True:
+                                self.__updateDateStartAndDateEnd(valuesOfLine['paymentDate'])
                                 valuesOfLine = multiplePerLessOneWhenNecessary(valuesOfLine, dataSetting)
                                 valuesOfLine = sumInterestFineAndDiscount(valuesOfLine, dataSetting)
                                 valuesOfLine = calcDifferencePaidReceivedXAmountOriginalAsInterestDiscount(valuesOfLine, dataSetting)
                                 valuesOfLine = updateValuesFieldsToSave(valuesOfLine)
+                                self.__dataToSave['listOfColumnsThatHaveValue'] = getListColumnsThatHaveValue(self.__dataToSave['listOfColumnsThatHaveValue'], valuesOfLine)
                                 # print(valuesOfLine)
                                 lancsThisLayout.append(valuesOfLine.copy())
 
@@ -163,6 +178,9 @@ class ReadLinesAndProcessed(object):
 
             self.__dataToSave['lancs'] = removeAnArrayFromWithinAnother(self.__dataToSave['lancs'])
 
+            # print(dataSetting)
+            # print('----------------------')
+            # print(self.__dataToSave)
             self.__dataToSave['typeLog'] = 'success'
             self.__dataToSave['messageLog'] = 'SUCCESS'
             self.__dataToSave['messageLogToShowUser'] = 'Sucesso ao processar'

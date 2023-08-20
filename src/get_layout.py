@@ -7,8 +7,11 @@ try:
     import os
     from aiohttp import ClientSession
     from typing import Dict
+    from dotenv import load_dotenv
 except Exception as e:
     print(f"Error importing libraries {e}")
+
+load_dotenv()
 
 API_HOST_SERVERLESS_COMPANIE_X_SETTING_LAYOUT = os.environ.get('API_HOST_SERVERLESS_COMPANIE_X_SETTING_LAYOUT')
 API_HOST_SERVERLESS_SETTING_LAYOUT_FINANCIAL = os.environ.get('API_HOST_SERVERLESS_SETTING_LAYOUT_FINANCIAL')

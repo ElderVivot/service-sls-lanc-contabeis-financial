@@ -16,11 +16,15 @@ def sumInterestFineAndDiscount(valuesOfLine: Dict[str, Any], dataSetting: Dict[s
     amountInterest = returnDataInDictOrArray(valuesOfLine, ["amountInterest"], 0.0)
     amountFine = returnDataInDictOrArray(valuesOfLine, ["amountFine"], 0.0)
     amountDiscount = returnDataInDictOrArray(valuesOfLine, ["amountDiscount"], 0.0)
+    amountMoviment = returnDataInDictOrArray(valuesOfLine, ["amountMoviment"], 0.0)
 
     if dataSetting['sumInterestFineAndDiscount'] is True:
-        if amountPaid > 0:
-            valuesOfLine['amountPaid'] = amountPaid + amountInterest + amountFine - amountDiscount
+        if amountMoviment != 0:
+            valuesOfLine['amountMoviment'] = amountMoviment + amountInterest + amountFine - amountDiscount
         else:
-            valuesOfLine['amountReceived'] = amountReceived + amountInterest + amountFine - amountDiscount
+            if amountPaid > 0 and amountMoviment == 0:
+                valuesOfLine['amountPaid'] = amountPaid + amountInterest + amountFine - amountDiscount
+            else:
+                valuesOfLine['amountReceived'] = amountReceived + amountInterest + amountFine - amountDiscount
 
     return valuesOfLine
