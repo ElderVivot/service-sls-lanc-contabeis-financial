@@ -11,10 +11,6 @@ except Exception as e:
 
 
 def isValidLineToPrint(data: Dict[str, Any], dataSetting: Dict[str, Any]):
-    # se não tiver nenhuma validação pra verificar já retorna true
-    if len(dataSetting['validationsLineToPrint']) == 0:
-        return True
-
     countValidationsOK = 0
     countValidationsConfigured = 0
     for key, validation in enumerate(dataSetting['validationsLineToPrint']):
@@ -51,7 +47,7 @@ def isValidLineToPrint(data: Dict[str, Any], dataSetting: Dict[str, Any]):
         elif typeValidation == "isEmpty" and valueFieldData == "":
             countValidationsOK += 1
 
-    paymentDate = returnDataInDictOrArray(data, ['paymentDate'])
+    paymentDate = returnDataInDictOrArray(data, ['paymentDate'], None)
     amountPaid = returnDataInDictOrArray(data, ['amountPaid'], 0.0)
     amountReceived = returnDataInDictOrArray(data, ['amountReceived'])
     amountPaidReceived = returnDataInDictOrArray(data, ['amountPaidReceived'], 0.0)
@@ -61,5 +57,5 @@ def isValidLineToPrint(data: Dict[str, Any], dataSetting: Dict[str, Any]):
         existSomeAmount = True
 
     # paymentDate is obrigatory and existSomeAmount too, to exist data of payment
-    if countValidationsOK >= countValidationsConfigured and str(type(paymentDate)).count('datetime.date') > 0 and existSomeAmount is True:
+    if countValidationsOK >= countValidationsConfigured and str(type(paymentDate)).count('datetime.date') > 0 and paymentDate is not None and existSomeAmount is True:
         return True
