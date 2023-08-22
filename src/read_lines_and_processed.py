@@ -24,6 +24,7 @@ try:
     from src.treat_data.update_values_fields_to_save import updateValuesFieldsToSave
     from src.treat_data.multiple_per_less_one_when_necessary import multiplePerLessOneWhenNecessary
     from src.treat_data.calc_difference_paidReceived_x_interestDiscount import calcDifferencePaidReceivedXAmountOriginalAsInterestDiscount
+    from src.treat_data.calc_difference_paidReceived_x_rateCart import calcDifferencePaidReceivedXAmountOriginalAsRateCard
     from src.treat_data.validate_if_cnpj_or_cpf_is_valid import validateIfCnpjOrCpfIsValid
     from src.treat_data.check_if_is_duplicated_fields import checkIfItIsDuplicatedFields
     from src.treat_data.handle_layout_is_partida_multipla import handleLayoutIsPartidaMultipla
@@ -75,15 +76,16 @@ class ReadLinesAndProcessed(object):
         }
 
     def __updateDateStartAndDateEnd(self, dateMovement: datetime.datetime):
-        if self.__dataToSave['startPeriod'] == '':
-            self.__dataToSave['startPeriod'] = dateMovement
-        if self.__dataToSave['startPeriod'] > dateMovement:
-            self.__dataToSave['startPeriod'] = dateMovement
+        if dateMovement is not None:
+            if self.__dataToSave['startPeriod'] == '':
+                self.__dataToSave['startPeriod'] = dateMovement
+            if self.__dataToSave['startPeriod'] > dateMovement:
+                self.__dataToSave['startPeriod'] = dateMovement
 
-        if self.__dataToSave['endPeriod'] == '':
-            self.__dataToSave['endPeriod'] = dateMovement
-        if self.__dataToSave['endPeriod'] < dateMovement:
-            self.__dataToSave['endPeriod'] = dateMovement
+            if self.__dataToSave['endPeriod'] == '':
+                self.__dataToSave['endPeriod'] = dateMovement
+            if self.__dataToSave['endPeriod'] < dateMovement:
+                self.__dataToSave['endPeriod'] = dateMovement
 
     async def __readLinesAndProcessed(self, dataFile: List[Any], key: str):
         self.__dataToSave['url'] = key
@@ -159,6 +161,7 @@ class ReadLinesAndProcessed(object):
                                 valuesOfLine = multiplePerLessOneWhenNecessary(valuesOfLine, dataSetting)
                                 valuesOfLine = sumInterestFineAndDiscount(valuesOfLine, dataSetting)
                                 valuesOfLine = calcDifferencePaidReceivedXAmountOriginalAsInterestDiscount(valuesOfLine, dataSetting)
+                                valuesOfLine = calcDifferencePaidReceivedXAmountOriginalAsRateCard(valuesOfLine, dataSetting)
                                 valuesOfLine = updateValuesFieldsToSave(valuesOfLine)
                                 self.__dataToSave['listOfColumnsThatHaveValue'] = getListColumnsThatHaveValue(self.__dataToSave['listOfColumnsThatHaveValue'], valuesOfLine)
                                 # print(valuesOfLine)

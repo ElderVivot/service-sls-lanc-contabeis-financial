@@ -45,6 +45,7 @@ def updateValuesFieldsToSave(valuesOfLine: Dict[str, Any]):
     valuesOfLine['amountInterest'] = returnDataInDictOrArray(valuesOfLine, ['amountInterest'], 0.0)
     valuesOfLine['amountFine'] = returnDataInDictOrArray(valuesOfLine, ['amountFine'], 0.0)
     valuesOfLine['amountDiscount'] = returnDataInDictOrArray(valuesOfLine, ['amountDiscount'], 0.0)
+    valuesOfLine['amountRate'] = returnDataInDictOrArray(valuesOfLine, ['amountRate'], 0.0)
     valuesOfLine['historic'] = returnDataInDictOrArray(valuesOfLine, ['historic'])
     valuesOfLine['category'] = returnDataInDictOrArray(valuesOfLine, ['category'])
     valuesOfLine['accountPlan'] = returnDataInDictOrArray(valuesOfLine, ['accountPlan'])

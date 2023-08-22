@@ -45,7 +45,7 @@ def correlationBankAndAccountBetweenSettingsAndClient(valuesOfLine: Dict[str, An
             valuesOfLine['account'] = accountFinancy
             valuesOfLine['ledgerAccount'] = ''
     else:
-        valuesOfLine['bank'] = returnBankForNumber(returnBankForName(bankFinancy))
+        valuesOfLine['bank'] = bankFinancy
         valuesOfLine['account'] = accountFinancy
         valuesOfLine['ledgerAccount'] = ''
 

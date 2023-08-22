@@ -31,9 +31,9 @@ def analyzeSettingFields(settingFields: Dict[str, Any], dataSetting: Dict[str, A
             dataSetting["considerToCheckIfItIsDuplicatedFields"][nameField] = True
 
         if nameField == "amountPaid" or nameField == "amountReceived":
-            print(settingField)
             dataSetting["sumInterestFineAndDiscount"] = returnDataInDictOrArray(settingField, ['sumInterestFineAndDiscount'], False)
             dataSetting["calcDifferencePaidOriginalAsInterestDiscount"] = returnDataInDictOrArray(settingField, ['calcDifferencePaidOriginalAsInterestDiscount'], False)
+            dataSetting["calcDifferencePaidOriginalAsRateCard"] = returnDataInDictOrArray(settingField, ['calcDifferencePaidOriginalAsRateCard'], False)
 
         if nameField == "cgceProviderClient":
             dataSetting["validateIfCnpjOrCpfIsValid"] = returnDataInDictOrArray(settingField, ['validateIfCnpjOrCpfIsValid'], False)
