@@ -25,6 +25,7 @@ dataDefaultAboutColumns = {
     "amountInterest": 0.0,
     "amountFine": 0.0,
     "amountDiscount": 0.0,
+    "amountRate": 0.0,
     "account": "",
     "cgceProviderClient": "",
     "dueDate": "",
