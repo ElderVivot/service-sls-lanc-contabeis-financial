@@ -386,12 +386,18 @@ def readExcelPandas(filePath: str, nameSheetToFilter=''):
     dataOfRow = []
 
     try:
-        sheetNames = pandas.ExcelFile(filePath).sheet_names
+        try:
+            sheetNames = pandas.ExcelFile(filePath).sheet_names
+        except Exception:
+            sheetNames = pandas.ExcelFile(filePath, engine='xlrd').sheet_names
 
         for sheet in sheetNames:
             try:
                 if nameSheetToFilter == '' or sheet == nameSheetToFilter:
-                    dataFrame = pandas.read_excel(filePath, sheet_name=sheet, header=None)
+                    try:
+                        dataFrame = pandas.read_excel(filePath, sheet_name=sheet, header=None)
+                    except Exception:
+                        dataFrame = pandas.read_excel(filePath, sheet_name=sheet, header=None, engine='xlrd')
                     dataFrameDropNa = dataFrame.dropna(how='all')
                     dataFrameFillNa = dataFrameDropNa.fillna('')
                     dataFrameToRecords = dataFrameFillNa.to_records(index=False)
