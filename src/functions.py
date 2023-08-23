@@ -181,6 +181,7 @@ def treatDateFieldInVector(data, numberOfField=0, fieldsHeader=[], nameFieldHead
 
 
 def treatTextField(value: str):
+    value = str(value)
     try:
         return minimalizeSpaces(removeCharSpecials(value.strip().upper()))
     except Exception:
