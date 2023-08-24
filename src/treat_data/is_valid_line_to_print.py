@@ -50,10 +50,10 @@ def isValidLineToPrint(data: Dict[str, Any], dataSetting: Dict[str, Any]):
     paymentDate = returnDataInDictOrArray(data, ['paymentDate'], None)
     amountPaid = returnDataInDictOrArray(data, ['amountPaid'], 0.0)
     amountReceived = returnDataInDictOrArray(data, ['amountReceived'])
-    amountPaidReceived = returnDataInDictOrArray(data, ['amountPaidReceived'], 0.0)
+    amountPaidOrReceived = returnDataInDictOrArray(data, ['amountPaidOrReceived'], 0.0)
 
     existSomeAmount = False
-    if amountPaid != 0 or amountReceived != 0 or amountPaidReceived != 0:
+    if amountPaid != 0 or amountReceived != 0 or amountPaidOrReceived != 0:
         existSomeAmount = True
 
     # paymentDate is obrigatory and existSomeAmount too, to exist data of payment
