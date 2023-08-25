@@ -14,7 +14,9 @@ def calcDifferencePaidReceivedXAmountOriginalAsRateCard(valuesOfLine: Dict[str, 
     amountReceived = returnDataInDictOrArray(valuesOfLine, ["amountReceived"], 0.0)
     amountOriginal = returnDataInDictOrArray(valuesOfLine, ["amountOriginal"], 0.0)
 
-    if dataSetting['calcDifferencePaidOriginalAsRateCard'] is True:
+    calcDifferencePaidOriginalAsRateCard = returnDataInDictOrArray(dataSetting, ['calcDifferencePaidOriginalAsRateCard'], False)
+
+    if calcDifferencePaidOriginalAsRateCard is True:
         if amountReceived != 0:  # apenas pros recebimento que tem o desconto da taxa de cartao
             if amountReceived < amountOriginal:  # o valor que recebe é menor que o valor original, pq tem o desconto da taxa
                 valuesOfLine['amountRate'] = amountOriginal - amountReceived
