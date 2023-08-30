@@ -389,7 +389,10 @@ def readExcelPandas(filePath: str, nameSheetToFilter=''):
         try:
             sheetNames = pandas.ExcelFile(filePath).sheet_names
         except Exception:
-            sheetNames = pandas.ExcelFile(filePath, engine='xlrd').sheet_names
+            try:
+                sheetNames = pandas.ExcelFile(filePath, engine='xlrd').sheet_names
+            except Exception:
+                sheetNames = pandas.ExcelFile(filePath, engine='openpyxl').sheet_names
 
         for sheet in sheetNames:
             try:
@@ -397,7 +400,11 @@ def readExcelPandas(filePath: str, nameSheetToFilter=''):
                     try:
                         dataFrame = pandas.read_excel(filePath, sheet_name=sheet, header=None)
                     except Exception:
-                        dataFrame = pandas.read_excel(filePath, sheet_name=sheet, header=None, engine='xlrd')
+                        try:
+                            dataFrame = pandas.read_excel(filePath, sheet_name=sheet, header=None, engine='xlrd')
+                        except Exception:
+                            dataFrame = pandas.read_excel(filePath, sheet_name=sheet, header=None, engine='openpyxl')
+
                     dataFrameDropNa = dataFrame.dropna(how='all')
                     dataFrameFillNa = dataFrameDropNa.fillna('')
                     dataFrameToRecords = dataFrameFillNa.to_records(index=False)
