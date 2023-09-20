@@ -87,7 +87,7 @@ class ReadLinesAndProcessed(object):
             if self.__dataToSave['endPeriod'] < dateMovement:
                 self.__dataToSave['endPeriod'] = dateMovement
 
-    async def __readLinesAndProcessed(self, dataFile: List[Any], key: str):
+    async def __readLinesAndProcessed(self, dataFile: List[Any], key: str, saveDatabase=True):
         self.__dataToSave['url'] = key
         self.__dataToSave['id'] = self.__getId(key)
         self.__dataToSave['tenant'] = self.__getTenant(key)
@@ -191,8 +191,18 @@ class ReadLinesAndProcessed(object):
                 self.__dataToSave['typeLog'] = 'success'
                 self.__dataToSave['messageLog'] = 'SUCCESS'
                 self.__dataToSave['messageLogToShowUser'] = 'Processou com sucesso, mas não encontrou nenhuma linha válida no arquivo pra lançamento contábil, revise o layout.'
-            saveData = SaveData(self.__dataToSave)
-            await saveData.saveData()
+            if saveDatabase is True:
+                saveData = SaveData(self.__dataToSave)
+                await saveData.saveData()
+            else:
+                import json
+                from src.functions import formatDate
+
+                self.__dataToSave['startPeriod'] = formatDate(self.__dataToSave['startPeriod'])
+                self.__dataToSave['endPeriod'] = formatDate(self.__dataToSave['endPeriod'])
+                jsonData = json.dumps(self.__dataToSave, indent=4)
+                with open('data/_dataToSave.json', 'w') as outfile:
+                    outfile.write(jsonData)
         except Exception as e:
             self.__dataToSave['typeLog'] = 'error'
             self.__dataToSave['messageLog'] = str(e)
@@ -201,8 +211,8 @@ class ReadLinesAndProcessed(object):
             await saveData.saveData()
             logger.exception(e)
 
-    def executeJobMainAsync(self, f: List[Any], key: str):
+    def executeJobMainAsync(self, f: List[Any], key: str, saveDatabase=True):
         try:
-            asyncio.run(self.__readLinesAndProcessed(f, key))
+            asyncio.run(self.__readLinesAndProcessed(f, key, saveDatabase))
         except Exception as e:
             logger.exception(e)

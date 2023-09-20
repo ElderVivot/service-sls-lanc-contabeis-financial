@@ -17,6 +17,7 @@ var/
 *.egg
 .env
 env.json
+data/
 
 # Serverless directories
 .serverless

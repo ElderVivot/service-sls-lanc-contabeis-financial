@@ -28,6 +28,11 @@ custom:
     dockerizePip: true
     layer: true
 
+package:
+  individually: true
+  patterns:
+    - '!data/**'
+
 functions:
   main:
     handler: src/handler.main

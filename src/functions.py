@@ -9,6 +9,7 @@ try:
     import re
     import datetime
     import pandas
+    import numpy
     from typing import Any, List
     from validate_docbr import CNPJ, CPF
 except Exception as e:
@@ -375,6 +376,10 @@ def identifiesAndTransformTypeDataOfSeriesPandas(data):
         newData = treatDecimalField(data)
     elif typeData.count('pandas') > 0 and typeData.count('timestamp') > 0:
         newData = data.strftime("%d/%m/%Y")
+    elif typeData.count('numpy') > 0 and typeData.count('datetime') > 0:
+        newData = numpy.datetime_as_string(data, unit='D')
+        newData = treatDateField(newData, 2)
+        newData = newData.strftime("%d/%m/%Y")
     else:
         newData = data
 

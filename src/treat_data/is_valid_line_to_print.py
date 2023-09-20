@@ -49,7 +49,7 @@ def isValidLineToPrint(data: Dict[str, Any], dataSetting: Dict[str, Any]):
 
     paymentDate = returnDataInDictOrArray(data, ['paymentDate'], None)
     amountPaid = returnDataInDictOrArray(data, ['amountPaid'], 0.0)
-    amountReceived = returnDataInDictOrArray(data, ['amountReceived'])
+    amountReceived = returnDataInDictOrArray(data, ['amountReceived'], 0.0)
     amountPaidOrReceived = returnDataInDictOrArray(data, ['amountPaidOrReceived'], 0.0)
 
     existSomeAmount = False
