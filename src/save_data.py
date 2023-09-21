@@ -62,8 +62,8 @@ class SaveData(object):
                     data={
                         "idLancContabilFinancial": self.__dataToSave['id'],
                         "idCompanie": self.__dataToSave['idCompanie'],
-                        "startPeriod": "2023-05-01",
-                        "endPeriod": "2023-05-31",
+                        "startPeriod": self.__dataToSave['startPeriod'],
+                        "endPeriod": self.__dataToSave['endPeriod'],
                         "urlFile": urlS3,
                         "typeLog": self.__dataToSave['typeLog'],
                         "messageLog": self.__dataToSave['messageLog'],
