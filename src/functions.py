@@ -199,17 +199,20 @@ def treatTextFieldInVector(data, numberOfField=0, fieldsHeader=[], nameFieldHead
     """
     if len(fieldsHeader) > 0 and nameFieldHeader is not None and nameFieldHeader != "":
         try:
-            value = data[searchPositionFieldForName(fieldsHeader, nameFieldHeader)]
+            value = data[searchPositionFieldForName(
+                fieldsHeader, nameFieldHeader)]
             return treatTextField(value) if keepTextOriginal is True else value
         except Exception:
             try:
-                value = analyzeIfFieldHasPositionInFileEnd(data, numberOfField, positionInFileEnd)
+                value = analyzeIfFieldHasPositionInFileEnd(
+                    data, numberOfField, positionInFileEnd)
                 return treatTextField(value) if keepTextOriginal is True else value
             except Exception:
                 return ""
     else:
         try:
-            value = analyzeIfFieldHasPositionInFileEnd(data, numberOfField, positionInFileEnd)
+            value = analyzeIfFieldHasPositionInFileEnd(
+                data, numberOfField, positionInFileEnd)
             return treatTextField(value) if keepTextOriginal is True else value
         except Exception:
             return ""
@@ -379,7 +382,7 @@ def identifiesAndTransformTypeDataOfSeriesPandas(data):
     elif typeData.count('numpy') > 0 and typeData.count('datetime') > 0:
         newData = numpy.datetime_as_string(data, unit='D')
         newData = treatDateField(newData, 2)
-        newData = newData.strftime("%d/%m/%Y")
+        newData = newData.strftime("%d/%m/%Y") if newData is not None else data
     else:
         newData = data
 
@@ -395,28 +398,35 @@ def readExcelPandas(filePath: str, nameSheetToFilter=''):
             sheetNames = pandas.ExcelFile(filePath).sheet_names
         except Exception:
             try:
-                sheetNames = pandas.ExcelFile(filePath, engine='xlrd').sheet_names
+                sheetNames = pandas.ExcelFile(
+                    filePath, engine='xlrd').sheet_names
             except Exception:
-                sheetNames = pandas.ExcelFile(filePath, engine='openpyxl').sheet_names
+                sheetNames = pandas.ExcelFile(
+                    filePath, engine='openpyxl').sheet_names
 
         for sheet in sheetNames:
             try:
                 if nameSheetToFilter == '' or sheet == nameSheetToFilter:
                     try:
-                        dataFrame = pandas.read_excel(filePath, sheet_name=sheet, header=None)
+                        dataFrame = pandas.read_excel(
+                            filePath, sheet_name=sheet, header=None)
                     except Exception:
                         try:
-                            dataFrame = pandas.read_excel(filePath, sheet_name=sheet, header=None, engine='xlrd')
+                            dataFrame = pandas.read_excel(
+                                filePath, sheet_name=sheet, header=None, engine='xlrd')
                         except Exception:
-                            dataFrame = pandas.read_excel(filePath, sheet_name=sheet, header=None, engine='openpyxl')
+                            dataFrame = pandas.read_excel(
+                                filePath, sheet_name=sheet, header=None, engine='openpyxl')
 
                     dataFrameDropNa = dataFrame.dropna(how='all')
                     dataFrameFillNa = dataFrameDropNa.fillna('')
-                    dataFrameToRecords = dataFrameFillNa.to_records(index=False)
+                    dataFrameToRecords = dataFrameFillNa.to_records(
+                        index=False)
                     for dataRow in dataFrameToRecords:
                         dataOfRow.append(sheet)
                         for data in dataRow:
-                            newData = identifiesAndTransformTypeDataOfSeriesPandas(data)
+                            newData = identifiesAndTransformTypeDataOfSeriesPandas(
+                                data)
                             dataOfRow.append(newData)
 
                         listOfDataAllRows.append(dataOfRow.copy())
