@@ -39,9 +39,8 @@ def identifiesTheLineThatTheDataIs(lineThatTheDataIs, data: Dict[str, Any], data
             countValidationsConfigured += 1
 
         if typeValidation == "isDate":
-            # este campo é pra caso tenha algum valor que seja data + horário ele não cai na verificação do isDate
-            valueFieldDate = treatDateField(valueFieldData) if len(valueFieldData) <= 10 else None
-            if valueFieldDate is not None:
+            valueFieldData = treatDateFieldInVector(data, positionInFile, positionInFileEnd=positionInFileEnd)
+            if str(type(valueFieldData)).count("datetime.date") > 0:                
                 countValidationsOK += 1
         elif typeValidation == "isEqual" and valueValidation == valueFieldData:
             countValidationsOK += 1
@@ -60,6 +59,8 @@ def identifiesTheLineThatTheDataIs(lineThatTheDataIs, data: Dict[str, Any], data
         elif typeValidation == "isDifferent" and valueFieldData != valueValidation:
             countValidationsOK += 1
         elif typeValidation == "isEmpty" and valueFieldData == "":
+            countValidationsOK += 1
+        elif typeValidation == "isNotEmpty" and valueFieldData != "":
             countValidationsOK += 1
 
     if countValidationsOK == countValidationsConfigured:

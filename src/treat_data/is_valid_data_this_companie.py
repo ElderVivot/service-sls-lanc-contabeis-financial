@@ -72,6 +72,10 @@ def isValidDataThisCompanie(valuesOfLine, validateIfDataIsThisCompanie, bankAndA
             countValidationsOK += 1
         elif typeValidation == "notContains" and valueFieldData.find(valueValidation) < 0:
             countValidationsOK += 1
+        elif typeValidation == "isEmpty" and valueFieldData == "":
+            countValidationsOK += 1
+        elif typeValidation == "isNotEmpty" and valueFieldData != "":
+            countValidationsOK += 1
 
     if countValidationsOK >= countValidationsConfigured:
         return True

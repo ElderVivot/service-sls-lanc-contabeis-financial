@@ -13,30 +13,31 @@ except Exception as e:
 def isValidLineToPrint(data: Dict[str, Any], dataSetting: Dict[str, Any]):
     countValidationsOK = 0
     countValidationsConfigured = 0
-    for key, validation in enumerate(dataSetting['validationsLineToPrint']):
-        nextValidationOrAnd = returnDataInDictOrArray(validation, ['nextValidationOrAnd'], 'and')
+    for key, validation in enumerate(dataSetting["validationsLineToPrint"]):
+        nextValidationOrAnd = returnDataInDictOrArray(validation, ["nextValidationOrAnd"], "and")
 
-        if nextValidationOrAnd == 'and' or key == len(dataSetting['validationsLineToPrint']) - 1:
+        if nextValidationOrAnd == "and" or key == len(dataSetting["validationsLineToPrint"]) - 1:
             countValidationsConfigured += 1
 
-        nameField: str = returnDataInDictOrArray(validation, ['nameField'])
-        typeValidation = returnDataInDictOrArray(validation, ['typeValidation'])
-        valueValidation = treatTextField(returnDataInDictOrArray(validation, ['valueValidation']))
-        valueValidation = treatDecimalField(valueValidation) if nameField.find('amount') >= 0 else valueValidation
+        nameField: str = returnDataInDictOrArray(validation, ["nameField"])
+        typeValidation = returnDataInDictOrArray(validation, ["typeValidation"])
+        valueValidation = treatTextField(returnDataInDictOrArray(validation, ["valueValidation"]))
+        valueValidation = treatDecimalField(valueValidation) if nameField.find("amount") >= 0 else valueValidation
 
         valueFieldData: str = returnDataInDictOrArray(data, [nameField])
+        valueFieldDataDecimal = treatDecimalField(valueFieldData)
 
-        if typeValidation == "isLessThan" and valueFieldData < valueValidation:
+        if typeValidation == "isLessThan" and valueFieldDataDecimal < valueValidation:
             countValidationsOK += 1
-        elif typeValidation == "isLessThanOrEqual" and valueFieldData <= valueValidation:
+        elif typeValidation == "isLessThanOrEqual" and valueFieldDataDecimal <= valueValidation:
             countValidationsOK += 1
-        elif typeValidation == "isBiggerThan" and valueFieldData > valueValidation:
+        elif typeValidation == "isBiggerThan" and valueFieldDataDecimal > valueValidation:
             countValidationsOK += 1
-        elif typeValidation == "isBiggerThanOrEqual" and valueFieldData >= valueValidation:
+        elif typeValidation == "isBiggerThanOrEqual" and valueFieldDataDecimal >= valueValidation:
             countValidationsOK += 1
         elif typeValidation == "isEqual" and valueFieldData == valueValidation:
             countValidationsOK += 1
-        elif typeValidation == "isDate" and str(type(valueFieldData)).count('datetime.date') > 0:
+        elif typeValidation == "isDate" and str(type(valueFieldData)).count("datetime.date") > 0:
             countValidationsOK += 1
         elif typeValidation == "isDifferent" and valueFieldData != valueValidation:
             countValidationsOK += 1
@@ -46,16 +47,18 @@ def isValidLineToPrint(data: Dict[str, Any], dataSetting: Dict[str, Any]):
             countValidationsOK += 1
         elif typeValidation == "isEmpty" and valueFieldData == "":
             countValidationsOK += 1
+        elif typeValidation == "isNotEmpty" and valueFieldData != "":
+            countValidationsOK += 1
 
-    paymentDate = returnDataInDictOrArray(data, ['paymentDate'], None)
-    amountPaid = returnDataInDictOrArray(data, ['amountPaid'], 0.0)
-    amountReceived = returnDataInDictOrArray(data, ['amountReceived'], 0.0)
-    amountPaidOrReceived = returnDataInDictOrArray(data, ['amountPaidOrReceived'], 0.0)
+    paymentDate = returnDataInDictOrArray(data, ["paymentDate"], None)
+    amountPaid = returnDataInDictOrArray(data, ["amountPaid"], 0.0)
+    amountReceived = returnDataInDictOrArray(data, ["amountReceived"], 0.0)
+    amountPaidOrReceived = returnDataInDictOrArray(data, ["amountPaidOrReceived"], 0.0)
 
     existSomeAmount = False
     if amountPaid != 0 or amountReceived != 0 or amountPaidOrReceived != 0:
         existSomeAmount = True
 
     # paymentDate is obrigatory and existSomeAmount too, to exist data of payment
-    if countValidationsOK >= countValidationsConfigured and str(type(paymentDate)).count('datetime.date') > 0 and paymentDate is not None and existSomeAmount is True:
+    if countValidationsOK >= countValidationsConfigured and str(type(paymentDate)).count("datetime.date") > 0 and paymentDate is not None and existSomeAmount is True:
         return True
