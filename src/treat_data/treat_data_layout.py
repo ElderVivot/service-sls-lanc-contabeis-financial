@@ -6,7 +6,7 @@ except ImportError:
 try:
     from typing import Dict, Any
     from src.functions import returnDataInDictOrArray, treatTextField, minimalizeSpaces, \
-        treatNumberField, treatTextFieldInVector, treatDecimalFieldInVector, treatDateField, treatDateFieldInVector
+        treatNumberField, treatTextFieldInVector, treatDecimalFieldInVector, treatDateField, treatDateFieldInVector, treatDecimalField
 except Exception as e:
     print(f"Error importing libraries {e}")
 
@@ -40,7 +40,7 @@ def identifiesTheLineThatTheDataIs(lineThatTheDataIs, data: Dict[str, Any], data
 
         if typeValidation == "isDate":
             valueFieldData = treatDateFieldInVector(data, positionInFile, positionInFileEnd=positionInFileEnd)
-            if str(type(valueFieldData)).count("datetime.date") > 0:                
+            if str(type(valueFieldData)).count("datetime.date") > 0:
                 countValidationsOK += 1
         elif typeValidation == "isEqual" and valueValidation == valueFieldData:
             countValidationsOK += 1
@@ -115,6 +115,32 @@ def treatDataLayout(data: Dict[str, Any], settingFields: Dict[str, Any], positio
         if readOnlyIfLineBelowTheMain is True and (isRowCorrect is False or informationIsOnOneLineBelowTheMain is False):
             continue
 
+        splitField = returnDataInDictOrArray(settingField, ['splitField'])
+        positionFieldInTheSplit = treatNumberField(returnDataInDictOrArray(settingField, ['positionFieldInTheSplit'], 0), isInt=True)
+        positionFieldInTheSplitEnd = treatNumberField(returnDataInDictOrArray(settingField, ['positionFieldInTheSplitEnd'], 0), isInt=True)  # o zero determina que não tem fim, é daquele campo pra frente
+
+        valueField = treatTextFieldInVector(data, positionInFile, positionsOfHeaderCorrect, nameColumn, positionInFileEnd=positionInFileEnd)
+        valueField = "" if positionInFile <= 0 and nameColumn is None else valueField
+
+        if splitField != "":
+            valueField = valueField.split(splitField)
+            if len(valueField) >= positionFieldInTheSplit:
+                if positionFieldInTheSplitEnd != 0:
+                    valueField = ' '.join(valueField[positionFieldInTheSplit - 1:positionFieldInTheSplitEnd])
+                else:
+                    valueField = ' '.join(valueField[positionFieldInTheSplit - 1:])
+            else:
+                valueField = ""
+            valueField = minimalizeSpaces(valueField)
+
+        if nameField == "account":
+            valueField = minimalizeSpaces(valueField.replace('-', ''))
+            valueField = treatNumberField(valueField, True)
+            valueField = "" if valueField == 0 else str(valueField)
+
+        if nameField == "bank":
+            valueField = minimalizeSpaces(valueField.replace('-', ''))
+
         if nameField.lower().find('date') >= 0:
             formatDate = returnDataInDictOrArray(settingField, ['formatDate'])
             if formatDate == 'dd/mm/aaaa':
@@ -126,41 +152,20 @@ def treatDataLayout(data: Dict[str, Any], settingFields: Dict[str, Any], positio
             else:
                 formatDate = 1
 
-            valueField = treatDateFieldInVector(data, positionInFile, positionsOfHeaderCorrect, nameColumn, formatDate, rowIsMain, positionInFileEnd=positionInFileEnd)
-            valueField = None if positionInFile <= 0 and nameColumn is None else valueField
+            if splitField != "":
+                valueField = treatDateField(valueField, formatDate)
+            else:
+                valueField = treatDateFieldInVector(data, positionInFile, positionsOfHeaderCorrect, nameColumn, formatDate, rowIsMain, positionInFileEnd=positionInFileEnd)
+                valueField = None if positionInFile <= 0 and nameColumn is None else valueField
 
         elif nameField.lower().find('amount') >= 0:
-            valueField = treatDecimalFieldInVector(data, positionInFile, positionsOfHeaderCorrect, nameColumn, positionInFileEnd=positionInFileEnd)
-            valueField = 0 if positionInFile <= 0 and nameColumn is None else round(valueField, 2)
-
-        else:
-            splitField = returnDataInDictOrArray(settingField, ['splitField'])
-            positionFieldInTheSplit = treatNumberField(returnDataInDictOrArray(settingField, ['positionFieldInTheSplit'], 0), isInt=True)
-            positionFieldInTheSplitEnd = treatNumberField(returnDataInDictOrArray(settingField, ['positionFieldInTheSplitEnd'], 0), isInt=True)  # o zero determina que não tem fim, é daquele campo pra frente
-
-            valueField = treatTextFieldInVector(data, positionInFile, positionsOfHeaderCorrect, nameColumn, positionInFileEnd=positionInFileEnd)
-            valueField = "" if positionInFile <= 0 and nameColumn is None else valueField
-
             if splitField != "":
-                valueField = valueField.split(splitField)
-                if len(valueField) >= positionFieldInTheSplit:
-                    if positionFieldInTheSplitEnd != 0:
-                        valueField = ' '.join(valueField[positionFieldInTheSplit - 1:positionFieldInTheSplitEnd])
-                    else:
-                        valueField = ' '.join(valueField[positionFieldInTheSplit - 1:])
-                else:
-                    valueField = ""
-                valueField = minimalizeSpaces(valueField)
+                valueField = treatDecimalField(valueField)
+            else:
+                valueField = treatDecimalFieldInVector(data, positionInFile, positionsOfHeaderCorrect, nameColumn, positionInFileEnd=positionInFileEnd)
+                valueField = 0 if positionInFile <= 0 and nameColumn is None else round(valueField, 2)
 
-            if nameField == "account":
-                valueField = minimalizeSpaces(valueField.replace('-', ''))
-                valueField = treatNumberField(valueField, True)
-                valueField = "" if valueField == 0 else str(valueField)
-
-            if nameField == "bank":
-                valueField = minimalizeSpaces(valueField.replace('-', ''))
-                # valueField = funcoesUteis.returnBankForName(valueField)
-                # valueField = funcoesUteis.returnBankForNumber(valueField)
+        # else:
 
         valuesOfLine['row'] = rowIsMain
         valuesOfLine[nameField] = valueField

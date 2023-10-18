@@ -34,6 +34,7 @@ except Exception as e:
 
 logger = logging.getLogger(__name__)
 
+
 class ReadLinesAndProcessed(object):
     def __init__(self) -> None:
         self.__dataToSave: Dict[str, Any] = {}

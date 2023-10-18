@@ -401,35 +401,28 @@ def readExcelPandas(filePath: str, nameSheetToFilter=''):
             sheetNames = pandas.ExcelFile(filePath).sheet_names
         except Exception:
             try:
-                sheetNames = pandas.ExcelFile(
-                    filePath, engine='xlrd').sheet_names
+                sheetNames = pandas.ExcelFile(filePath, engine='xlrd').sheet_names
             except Exception:
-                sheetNames = pandas.ExcelFile(
-                    filePath, engine='openpyxl').sheet_names
+                sheetNames = pandas.ExcelFile(filePath, engine='openpyxl').sheet_names
 
         for sheet in sheetNames:
             try:
                 if nameSheetToFilter == '' or sheet == nameSheetToFilter:
                     try:
-                        dataFrame = pandas.read_excel(
-                            filePath, sheet_name=sheet, header=None)
+                        dataFrame = pandas.read_excel(filePath, sheet_name=sheet, header=None)
                     except Exception:
                         try:
-                            dataFrame = pandas.read_excel(
-                                filePath, sheet_name=sheet, header=None, engine='xlrd')
+                            dataFrame = pandas.read_excel(filePath, sheet_name=sheet, header=None, engine='xlrd')
                         except Exception:
-                            dataFrame = pandas.read_excel(
-                                filePath, sheet_name=sheet, header=None, engine='openpyxl')
+                            dataFrame = pandas.read_excel(filePath, sheet_name=sheet, header=None, engine='openpyxl')
 
                     dataFrameDropNa = dataFrame.dropna(how='all')
                     dataFrameFillNa = dataFrameDropNa.fillna('')
-                    dataFrameToRecords = dataFrameFillNa.to_records(
-                        index=False)
+                    dataFrameToRecords = dataFrameFillNa.to_records(index=False)
                     for dataRow in dataFrameToRecords:
                         dataOfRow.append(sheet)
                         for data in dataRow:
-                            newData = identifiesAndTransformTypeDataOfSeriesPandas(
-                                data)
+                            newData = identifiesAndTransformTypeDataOfSeriesPandas(data)
                             dataOfRow.append(newData)
 
                         listOfDataAllRows.append(dataOfRow.copy())
