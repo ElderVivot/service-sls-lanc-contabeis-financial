@@ -124,11 +124,14 @@ def treatDateField(valorCampo, formatoData=1):
     :param formatoData: 1 = 'DD/MM/YYYY' ; 2 = 'YYYY-MM-DD' ; 3 = 'YYYY/MM/DD' ; 4 = 'DDMMYYYY'
     :return: retorna como uma data. Caso não seja uma data válida irá retornar None
     """
-    if type(valorCampo) == 'datetime.date' or type(valorCampo) == 'datetime.datetime':
+    if str(type(valorCampo)).find('datetime.date') >= 0:
         return valorCampo
 
-    if isinstance(valorCampo, datetime.datetime):
+    if str(type(valorCampo)).find('datetime.datetime') >= 0:
         return valorCampo.date()
+
+    # if isinstance(valorCampo, datetime.datetime):
+    #     return valorCampo.date()
 
     valorCampo = str(valorCampo).strip()
 

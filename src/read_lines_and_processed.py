@@ -34,10 +34,6 @@ except Exception as e:
 
 logger = logging.getLogger(__name__)
 
-API_HOST_SERVERLESS = os.environ.get("API_HOST_SERVERLESS")
-API_HOST_DB_RELATIONAL = os.environ.get("API_HOST_DB_RELATIONAL")
-
-
 class ReadLinesAndProcessed(object):
     def __init__(self) -> None:
         self.__dataToSave: Dict[str, Any] = {}
