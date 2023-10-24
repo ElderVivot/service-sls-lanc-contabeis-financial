@@ -4,12 +4,11 @@ except ImportError:
     pass
 
 try:
-    import os
     import asyncio
     import datetime
     import logging
     from typing import Dict, Any, List
-    from src.functions import returnDataInDictOrArray, removeAnArrayFromWithinAnother
+    from src.functions import returnDataInDictOrArray, removeAnArrayFromWithinAnother, treatTextField
     from src.get_layout import GetLayout
     from src.save_data import SaveData
     from src.treat_data.analyze_setting_fields import analyzeSettingFields
@@ -84,14 +83,24 @@ class ReadLinesAndProcessed(object):
             if self.__dataToSave["endPeriod"] < dateMovement:
                 self.__dataToSave["endPeriod"] = dateMovement
 
-    def __mountHistoric(self, lanc: Dict[str, Any]):
-        if lanc["historic"]:
-            return lanc["historic"]
-        if lanc["document"] != "" and lanc["nameProviderClient"] != "":
-            return f"NF/DOC {lanc['document']} - {lanc['nameProviderClient']}"
-        if lanc["document"] == "" and lanc["nameProviderClient"] != "":
-            return lanc["nameProviderClient"]
-        return ""
+    def __mountHistoric(self, lanc: Dict[str, Any], historicComposition: str):
+        if historicComposition != "":
+            historicComposition = historicComposition.replace('[NF_DOC]', lanc['document'])
+            historicComposition = historicComposition.replace('[NOME_CLIENTE_FORNECEDOR]', lanc['nameProviderClient'])
+            historicComposition = historicComposition.replace('[HISTORICO]', lanc['historic'])
+            historicComposition = historicComposition.replace('[CATEGORIA]', lanc['category'])
+            historicComposition = historicComposition.replace('[PLANO_CONTAS]', lanc['accountPlan'])
+            historicComposition = historicComposition.replace('[TIPO_MOVIMENTO]', lanc['typeMoviment'])
+            historicComposition = historicComposition.replace('[FILIAL_EMPRESA]', lanc['companyBranch'])
+            return historicComposition
+        else:
+            if lanc["historic"] != "":
+                return lanc["historic"]
+            if lanc["document"] != "" and lanc["nameProviderClient"] != "":
+                return f"NF/DOC {lanc['document']} - {lanc['nameProviderClient']}"
+            if lanc["document"] == "" and lanc["nameProviderClient"] != "":
+                return lanc["nameProviderClient"]
+            return ""
 
     async def __readLinesAndProcessed(self, dataFile: List[Any], key: str, saveDatabase=True):
         self.__dataToSave["url"] = key
@@ -111,8 +120,7 @@ class ReadLinesAndProcessed(object):
             settingsLayout = await getLayout.getDataCompanieXSettingLayout(self.__dataToSave["idCompanie"])
             settingsLayout = returnDataInDictOrArray(settingsLayout, ["Item"], None)
             if settingsLayout is None:
-                print("Nao existe layout pra essa empresa")
-                return None
+                raise Exception('DONT_EXIST_LAYOUT_THIS_COMPANIE')
             layouts = settingsLayout["layoutsFinancial"]
 
             for layout in layouts:
@@ -127,6 +135,7 @@ class ReadLinesAndProcessed(object):
                     layoutData = returnDataInDictOrArray(layoutData, ["Item"], None)
                     if layoutData is None:
                         print(f"Layout com ID {layout['idLayout']} não encontrado")
+                        raise Exception('LAYOUT_DELETED')
 
                     analyzeSetting = analyzeSettingFields(layoutData["fields"], dataSetting)
                     fields = analyzeSetting["fieldsValidated"]
@@ -134,6 +143,7 @@ class ReadLinesAndProcessed(object):
 
                     dataSetting["validationsLineToPrint"] = returnDataInDictOrArray(layoutData, ["validationLineToPrint"], [])
                     dataSetting["linesOfFile"] = returnDataInDictOrArray(layoutData, ["linesOfFile"], [])
+                    historicComposition = treatTextField(returnDataInDictOrArray(layoutData, ["historicComposition"]))
 
                     bankAndAccountCorrelation = returnDataInDictOrArray(layout, ["bankAndAccountCorrelation"])
                     validateIfDataIsThisCompanie = returnDataInDictOrArray(layout, ["validateIfDataIsThisCompanie"])
@@ -170,7 +180,7 @@ class ReadLinesAndProcessed(object):
                                 valuesOfLine = calcDifferencePaidReceivedXAmountOriginalAsRateCard(valuesOfLine, dataSetting)
                                 valuesOfLine = updateValuesFieldsToSave(valuesOfLine)
                                 valuesOfLine["codeHistoric"] = ""
-                                valuesOfLine["historic"] = self.__mountHistoric(valuesOfLine)
+                                valuesOfLine["historic"] = self.__mountHistoric(valuesOfLine, historicComposition)
                                 self.__dataToSave["listOfColumnsThatHaveValue"] = getListColumnsThatHaveValue(self.__dataToSave["listOfColumnsThatHaveValue"], valuesOfLine)
                                 # print(valuesOfLine)
                                 lancsThisLayout.append(valuesOfLine.copy())
@@ -215,6 +225,12 @@ class ReadLinesAndProcessed(object):
             self.__dataToSave["typeLog"] = "error"
             self.__dataToSave["messageLog"] = str(e)
             self.__dataToSave["messageLogToShowUser"] = "Erro ao processar, entre em contato com suporte"
+            if str(e) == 'DONT_EXIST_LAYOUT_THIS_COMPANIE':
+                self.__dataToSave["typeLog"] = "warning"
+                self.__dataToSave["messageLogToShowUser"] = "Não existe layout configurado pra essa empresa. Acesse Cadastros >> Vincular Empresas nos Layouts e configure"
+            if str(e) == 'LAYOUT_DELETED':
+                self.__dataToSave["typeLog"] = "warning"
+                self.__dataToSave["messageLogToShowUser"] = "O layout vinculado nesta empresa não existe mais, acesse Cadastros >> Vincular Empresas nos Layouts e atualize"
             saveData = SaveData(self.__dataToSave)
             await saveData.saveData()
             logger.exception(e)
