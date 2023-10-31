@@ -10,6 +10,7 @@ try:
     import datetime
     import pandas
     import numpy
+    import csv
     from typing import Any, List
     from validate_docbr import CNPJ, CPF
 except Exception as e:
@@ -430,6 +431,35 @@ def readExcelPandas(filePath: str, nameSheetToFilter=''):
             except Exception as e:
                 logger.exception(e)
 
+    except Exception as e:
+        logger.exception(e)
+
+    return listOfDataAllRows
+
+
+def readCsv(filePath, splitField=';'):
+    listOfDataAllRows = []
+    dataOfRow = []
+
+    try:
+        try:
+            dataFrame = pandas.read_csv(filePath, sep=splitField, encoding='utf-8')
+        except Exception:
+            dataFrame = pandas.read_csv(filePath, sep=splitField, encoding='cp1252')
+        # print(dataFrame)
+
+        dataFrameDropNa = dataFrame.dropna(how='all')
+        dataFrameFillNa = dataFrameDropNa.fillna('')
+        dataFrameToRecords = dataFrameFillNa.to_records(index=False)
+        for idx, dataRow in enumerate(dataFrameToRecords):
+            print(dataRow)
+            dataOfRow.append('')
+            for data in dataRow:
+                newData = identifiesAndTransformTypeDataOfSeriesPandas(data)
+                dataOfRow.append(newData)
+
+            listOfDataAllRows.append(dataOfRow.copy())
+            dataOfRow.clear()
     except Exception as e:
         logger.exception(e)
 

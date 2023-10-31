@@ -41,8 +41,5 @@ def main(event, context):
             fileContent = fileObj['Body'].read()
             fileBytesIO = io.BytesIO(fileContent)
 
-        if extension in ('xlsx', 'xls'):
-            data = readExcelPandas(fileBytesIO)
-        else:
-            data = []
-        ReadLinesAndProcessed().executeJobMainAsync(data, key)
+        extension = extension.lower()
+        ReadLinesAndProcessed().executeJobMainAsync(fileBytesIO, key, True, extension)

@@ -8,7 +8,7 @@ try:
     import datetime
     import logging
     from typing import Dict, Any, List
-    from src.functions import returnDataInDictOrArray, removeAnArrayFromWithinAnother, treatTextField
+    from src.functions import readCsv, readExcelPandas, returnDataInDictOrArray, removeAnArrayFromWithinAnother, treatTextField
     from src.get_layout import GetLayout
     from src.save_data import SaveData
     from src.treat_data.analyze_setting_fields import analyzeSettingFields
@@ -102,7 +102,7 @@ class ReadLinesAndProcessed(object):
                 return lanc["nameProviderClient"]
             return ""
 
-    async def __readLinesAndProcessed(self, dataFile: List[Any], key: str, saveDatabase=True):
+    async def __readLinesAndProcessed(self, fileBytesIO: List[Any], key: str, saveDatabase=True, extension='xlsx'):
         self.__dataToSave["url"] = key
         self.__dataToSave["id"] = self.__getId(key)
         self.__dataToSave["tenant"] = self.__getTenant(key)
@@ -137,6 +137,9 @@ class ReadLinesAndProcessed(object):
                         print(f"Layout com ID {layout['idLayout']} não encontrado")
                         raise Exception('LAYOUT_DELETED')
 
+                    fileType = layoutData['fileType']
+                    splitFile = layoutData['splitFile']
+
                     analyzeSetting = analyzeSettingFields(layoutData["fields"], dataSetting)
                     fields = analyzeSetting["fieldsValidated"]
                     dataSetting = analyzeSetting["dataSetting"]
@@ -147,6 +150,15 @@ class ReadLinesAndProcessed(object):
 
                     bankAndAccountCorrelation = returnDataInDictOrArray(layout, ["bankAndAccountCorrelation"])
                     validateIfDataIsThisCompanie = returnDataInDictOrArray(layout, ["validateIfDataIsThisCompanie"])
+
+                    if fileType == 'excel' and extension in ('xls', 'xlsx', 'xltx'):
+                        dataFile = readExcelPandas(fileBytesIO)
+                    elif fileType == 'csv' and extension in ('csv', 'txt'):
+                        dataFile = readCsv(fileBytesIO)
+                    # elif fileType == 'txt' and extension in ('txt', 'html'):
+                    #     dataFile = leTxt(file)
+                    else:
+                        dataFile = []
 
                     for numberLine, data in enumerate(dataFile):
                         # print(numberLine, '----', data)
@@ -235,8 +247,8 @@ class ReadLinesAndProcessed(object):
             await saveData.saveData()
             logger.exception(e)
 
-    def executeJobMainAsync(self, f: List[Any], key: str, saveDatabase=True):
+    def executeJobMainAsync(self, fileBytesIO: List[Any], key: str, saveDatabase=True, extension='xlsx'):
         try:
-            asyncio.run(self.__readLinesAndProcessed(f, key, saveDatabase))
+            asyncio.run(self.__readLinesAndProcessed(fileBytesIO, key, saveDatabase, extension))
         except Exception as e:
             logger.exception(e)
