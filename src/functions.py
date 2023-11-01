@@ -452,7 +452,6 @@ def readCsv(filePath, splitField=';'):
         dataFrameFillNa = dataFrameDropNa.fillna('')
         dataFrameToRecords = dataFrameFillNa.to_records(index=False)
         for idx, dataRow in enumerate(dataFrameToRecords):
-            print(dataRow)
             dataOfRow.append('')
             for data in dataRow:
                 newData = identifiesAndTransformTypeDataOfSeriesPandas(data)

@@ -7,6 +7,7 @@ try:
     import asyncio
     import datetime
     import logging
+    from operator import itemgetter
     from typing import Dict, Any, List
     from src.functions import readCsv, readExcelPandas, returnDataInDictOrArray, removeAnArrayFromWithinAnother, treatTextField
     from src.get_layout import GetLayout
@@ -192,6 +193,8 @@ class ReadLinesAndProcessed(object):
                                 valuesOfLine = calcDifferencePaidReceivedXAmountOriginalAsRateCard(valuesOfLine, dataSetting)
                                 valuesOfLine = updateValuesFieldsToSave(valuesOfLine)
                                 valuesOfLine["codeHistoric"] = ""
+                                paymentDate = valuesOfLine["paymentDate"]
+                                valuesOfLine["paymentDateAsDate"] = f'{paymentDate[6:]}{paymentDate[3:5]}{paymentDate[0:2]}'
                                 valuesOfLine["historic"] = self.__mountHistoric(valuesOfLine, historicComposition)
                                 self.__dataToSave["listOfColumnsThatHaveValue"] = getListColumnsThatHaveValue(self.__dataToSave["listOfColumnsThatHaveValue"], valuesOfLine)
                                 # print(valuesOfLine)
@@ -210,6 +213,7 @@ class ReadLinesAndProcessed(object):
                     logger.exception(e)
 
             self.__dataToSave["lancs"] = removeAnArrayFromWithinAnother(self.__dataToSave["lancs"])
+            self.__dataToSave['lancs'] = sorted(self.__dataToSave['lancs'], key=itemgetter('paymentDateAsDate'))
 
             # print(dataSetting)
             # print('----------------------')
