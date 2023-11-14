@@ -93,6 +93,7 @@ class ReadLinesAndProcessed(object):
             historicComposition = historicComposition.replace('[PLANO_CONTAS]', lanc['accountPlan'])
             historicComposition = historicComposition.replace('[TIPO_MOVIMENTO]', lanc['typeMoviment'])
             historicComposition = historicComposition.replace('[FILIAL_EMPRESA]', lanc['companyBranch'])
+            historicComposition = historicComposition.replace('[NUMERO_PARCELA]', lanc['parcelNumber'])
             return historicComposition
         else:
             if lanc["historic"] != "":
