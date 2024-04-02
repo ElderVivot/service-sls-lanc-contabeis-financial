@@ -31,13 +31,15 @@ def removeCharSpecials(text: str):
     nfkd = unicodedata.normalize('NFKD', text).encode(
         'ASCII', 'ignore').decode('ASCII')
     textFormated = u"".join([c for c in nfkd if not unicodedata.combining(c)])
+    textFormated = textFormated.replace('\n', ' ').replace('\r', '')
     return re.sub('[^a-zA-Z0-9.!+:><=[\])|?$(/*,\-_ \\\]', '', textFormated)
 
 
 def searchPositionFieldForName(header, nameField=''):
     nameField = treatTextField(nameField)
     try:
-        return header[nameField]
+        position = header[nameField]
+        return position
     except Exception:
         return None
 

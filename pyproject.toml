@@ -9,7 +9,7 @@ packages = [{include = "service_sls_process_lanc_contabeis_financial"}]
 [tool.poetry.dependencies]
 python = "^3.9"
 aiohttp = "^3.8.4"
-xlrd = "^2.0.1"
+xlrd = "2.0.1"
 pandas = "^2.0.2"
 openpyxl = "^3.1.2"
 validate-docbr = "^1.10.0"

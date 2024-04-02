@@ -184,6 +184,7 @@ class ReadLinesAndProcessed(object):
 
                             valuesOfLine["cgceProviderClient"] = validateIfCnpjOrCpfIsValid(valuesOfLine, dataSetting)
 
+                            # print(data, valuesOfLine)
                             isValid = isValidLineToPrint(valuesOfLine, dataSetting)
                             isValidDataCompanie = isValidDataThisCompanie(valuesOfLine, validateIfDataIsThisCompanie, bankAndAccountCorrelation)
                             if isValid is True and isValidDataCompanie is True:
