@@ -162,8 +162,11 @@ def treatDataLayout(data: Dict[str, Any], settingFields: Dict[str, Any], positio
             if splitField != "":
                 valueField = treatDecimalField(valueField)
             else:
+                valueFieldOriginal = valueField
                 valueField = treatDecimalFieldInVector(data, positionInFile, positionsOfHeaderCorrect, nameColumn, positionInFileEnd=positionInFileEnd)
                 valueField = 0 if positionInFile <= 0 and nameColumn is None else round(valueField, 2)
+                if valueFieldOriginal[-1] == 'D':
+                    valueField *= -1
 
         # else:
 

@@ -6,15 +6,12 @@ import pandas
 import xlrd
 load_dotenv()
 
-# dataFile = readExcelPandas('data/t12.csv')
-# ReadLinesAndProcessed().executeJobMainAsync(dataFile, 'ffa680d3-3b4e-4/34e021e4-4aa8-4a76-b8cb-159243195509/ABC', False)
-
-pathFile = 'data/t6.xls'
+pathFile = 'data/t7.xlsx'
 extension = pathFile.split('.')[1].lower()
 file = open(pathFile, 'rb')
 fileContent = file.read()
 fileBytesIO = io.BytesIO(fileContent)
-ReadLinesAndProcessed().executeJobMainAsync(fileBytesIO, '660cd413-018f-4/782e94aa-1f78-4347-a2fa-a3009c5c911a/ABC', False, extension)
+ReadLinesAndProcessed().executeJobMainAsync(fileBytesIO, '73663d71-05df-4/56266579-f2f2-4089-839a-bb8f92a87787/ABC', False, extension)
 
 # 4904e452-9b2c-4/ed5792c9-d944-4dff-bbf1-b4a97af1409f -> ultra
 # 97338620-6e04-4/8ecc4b70-3470-4fb9-90a6-2d6f126bf0fd/ABC -> wise contabilidade
