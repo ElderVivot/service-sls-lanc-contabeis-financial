@@ -10,7 +10,7 @@ provider:
   stage: prod
   region: us-east-2
   memorySize: 512
-  timeout: 60
+  timeout: 120
   environment:
     AWS_S3_ACCESS_KEY_ID: ${file(./env.json):AWS_S3_ACCESS_KEY_ID}
     AWS_S3_SECRET_ACCESS_KEY: ${file(./env.json):AWS_S3_SECRET_ACCESS_KEY}

@@ -29,6 +29,7 @@ try:
     from src.treat_data.check_if_is_duplicated_fields import checkIfItIsDuplicatedFields
     from src.treat_data.handle_layout_is_partida_multipla import handleLayoutIsPartidaMultipla
     from src.treat_data.check_columns_that_have_value import getListColumnsThatHaveValue
+    from src.treat_data.update_amount_movement_if_negative import updateAmountMovementIfNegative
 except Exception as e:
     print(f"Error importing libraries {e}")
 
@@ -180,6 +181,7 @@ class ReadLinesAndProcessed(object):
                             dataSetting = updateFieldsNotMain(valuesOfLine, fields, dataSetting)
                             valuesOfLine = groupsRowData(valuesOfLine, dataSetting)
 
+                            valuesOfLine = updateAmountMovementIfNegative(valuesOfLine)
                             valuesOfLine = correlationBankAndAccountBetweenSettingsAndClient(valuesOfLine, bankAndAccountCorrelation)
 
                             valuesOfLine["cgceProviderClient"] = validateIfCnpjOrCpfIsValid(valuesOfLine, dataSetting)
