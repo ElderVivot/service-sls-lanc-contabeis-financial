@@ -235,10 +235,21 @@ class ReadLinesAndProcessed(object):
             else:
                 import json
                 from src.functions import formatDate
+                import base64
+                import bz2
+                import sys
+                import gzip
 
                 self.__dataToSave["startPeriod"] = formatDate(self.__dataToSave["startPeriod"])
                 self.__dataToSave["endPeriod"] = formatDate(self.__dataToSave["endPeriod"])
                 jsonData = json.dumps(self.__dataToSave, indent=4)
+
+                dataBytes = bytes(json.dumps(self.__dataToSave), 'utf-8')
+                dataEncoded = base64.b64encode(dataBytes)
+                dataCompress = gzip.compress(dataBytes)
+                dataCompressBZ2 = bz2.compress(dataBytes)
+                print(sys.getsizeof(dataCompress), sys.getsizeof(dataEncoded), sys.getsizeof(dataBytes), sys.getsizeof(dataCompressBZ2), len(self.__dataToSave['lancs']))
+
                 with open("data/_dataToSave.json", "w") as outfile:
                     outfile.write(jsonData)
         except Exception as e:
