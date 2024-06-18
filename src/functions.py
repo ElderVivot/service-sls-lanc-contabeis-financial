@@ -4,6 +4,7 @@ except ImportError:
     pass
 
 try:
+    import io
     import unicodedata
     import logging
     import re
@@ -12,6 +13,7 @@ try:
     import numpy
     import csv
     from typing import Any, List
+    from bs4 import BeautifulSoup
     from validate_docbr import CNPJ, CPF
 except Exception as e:
     print("Error importing libraries", e)
@@ -406,7 +408,11 @@ def readExcelPandas(filePath: str, nameSheetToFilter=''):
             try:
                 sheetNames = pandas.ExcelFile(filePath, engine='xlrd').sheet_names
             except Exception:
-                sheetNames = pandas.ExcelFile(filePath, engine='openpyxl').sheet_names
+                try:
+                    sheetNames = pandas.ExcelFile(filePath, engine='openpyxl').sheet_names
+                except Exception as e:
+                    logger.error(e)
+                    sheetNames = []
 
         for sheet in sheetNames:
             try:
@@ -417,7 +423,11 @@ def readExcelPandas(filePath: str, nameSheetToFilter=''):
                         try:
                             dataFrame = pandas.read_excel(filePath, sheet_name=sheet, header=None, engine='xlrd')
                         except Exception:
-                            dataFrame = pandas.read_excel(filePath, sheet_name=sheet, header=None, engine='openpyxl')
+                            try:
+                                dataFrame = pandas.read_excel(filePath, sheet_name=sheet, header=None, engine='openpyxl')
+                            except Exception as e:
+                                logger.error(e)
+                                return []
 
                     dataFrameDropNa = dataFrame.dropna(how='all')
                     dataFrameFillNa = dataFrameDropNa.fillna('')
@@ -463,5 +473,25 @@ def readCsv(filePath, splitField=';'):
             dataOfRow.clear()
     except Exception as e:
         logger.exception(e)
+
+    return listOfDataAllRows
+
+
+def readXlsWithBeautifulSoup(fileBytesIO):
+    listOfDataAllRows = []
+
+    fileBytesSTR = fileBytesIO.getvalue()
+    soup = BeautifulSoup(fileBytesSTR, 'xml')
+
+    for sheet in soup.findAll('Worksheet'):
+        for row in sheet.findAll('Row'):
+            dataOfRow = []
+            dataOfRow.append(sheet.attrs['ss:Name'])
+            for cell in row.findAll('Cell'):
+                if cell.Data:
+                    dataOfRow.append(cell.Data.text)
+                else:
+                    dataOfRow.append('')
+            listOfDataAllRows.append(dataOfRow)
 
     return listOfDataAllRows

@@ -9,7 +9,8 @@ try:
     import logging
     from operator import itemgetter
     from typing import Dict, Any, List
-    from src.functions import readCsv, readExcelPandas, returnDataInDictOrArray, removeAnArrayFromWithinAnother, treatTextField
+    from src.functions import readCsv, readExcelPandas, returnDataInDictOrArray, removeAnArrayFromWithinAnother, \
+        treatTextField, readXlsWithBeautifulSoup
     from src.get_layout import GetLayout
     from src.save_data import SaveData
     from src.treat_data.analyze_setting_fields import analyzeSettingFields
@@ -154,8 +155,12 @@ class ReadLinesAndProcessed(object):
                     bankAndAccountCorrelation = returnDataInDictOrArray(layout, ["bankAndAccountCorrelation"])
                     validateIfDataIsThisCompanie = returnDataInDictOrArray(layout, ["validateIfDataIsThisCompanie"])
 
-                    if fileType == 'excel' and extension in ('xls', 'xlsx', 'xltx'):
+                    if fileType == 'excel' and extension in ('xlsx', 'xltx'):
                         dataFile = readExcelPandas(fileBytesIO)
+                    elif fileType == 'excel' and extension in ('xls'):
+                        dataFile = readExcelPandas(fileBytesIO)
+                        if len(dataFile) == 0:
+                            dataFile = readXlsWithBeautifulSoup(fileBytesIO)
                     elif fileType == 'csv' and extension in ('csv', 'txt'):
                         dataFile = readCsv(fileBytesIO)
                     # elif fileType == 'txt' and extension in ('txt', 'html'):
