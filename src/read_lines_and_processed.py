@@ -10,7 +10,7 @@ try:
     from operator import itemgetter
     from typing import Dict, Any, List
     from src.functions import readCsv, readExcelPandas, returnDataInDictOrArray, removeAnArrayFromWithinAnother, \
-        treatTextField, readXlsWithBeautifulSoup
+        treatTextField, readXlsWithBeautifulSoup, treatNumberField
     from src.get_layout import GetLayout
     from src.save_data import SaveData
     from src.treat_data.analyze_setting_fields import analyzeSettingFields
@@ -87,16 +87,36 @@ class ReadLinesAndProcessed(object):
                 self.__dataToSave["endPeriod"] = dateMovement
 
     def __mountHistoric(self, lanc: Dict[str, Any], historicComposition: str):
+        textsToSearch = {
+            'NF_DOC': 'document',
+            'NOME_CLIENTE_FORNECEDOR': 'nameProviderClient',
+            'HISTORICO': 'historic',
+            'CATEGORIA': 'category',
+            'PLANO_CONTAS': 'accountPlan',
+            'TIPO_MOVIMENTO': 'typeMoviment',
+            'FILIAL_EMPRESA': 'companyBranch',
+            'NUMERO_PARCELA': 'parcelNumber'
+        }
+
         if historicComposition != "":
-            historicComposition = historicComposition.replace('[NF_DOC]', lanc['document'])
-            historicComposition = historicComposition.replace('[NOME_CLIENTE_FORNECEDOR]', lanc['nameProviderClient'])
-            historicComposition = historicComposition.replace('[HISTORICO]', lanc['historic'])
-            historicComposition = historicComposition.replace('[CATEGORIA]', lanc['category'])
-            historicComposition = historicComposition.replace('[PLANO_CONTAS]', lanc['accountPlan'])
-            historicComposition = historicComposition.replace('[TIPO_MOVIMENTO]', lanc['typeMoviment'])
-            historicComposition = historicComposition.replace('[FILIAL_EMPRESA]', lanc['companyBranch'])
-            historicComposition = historicComposition.replace('[NUMERO_PARCELA]', lanc['parcelNumber'])
-            return historicComposition
+            historicCompositionSplit = historicComposition.split('[')
+            newHistoric = ''
+            for historicC in historicCompositionSplit:
+                findHistoricToSearch = False
+                for text, field in textsToSearch.items():
+                    posColchete = historicC.find(']')
+                    if historicC.find(text) >= 0:
+                        findHistoricToSearch = True
+                        valueField = lanc[field]
+                        if valueField != '' and treatNumberField(valueField, isInt=True) > 0:
+                            newHistoric = newHistoric + historicC.replace(text, valueField)
+                        else:
+                            newHistoric = newHistoric + historicC[posColchete:]
+                        newHistoric = newHistoric.replace(']', '')
+                        break
+                if findHistoricToSearch is False:
+                    newHistoric = newHistoric + historicC
+            return treatTextField(newHistoric)
         else:
             if lanc["historic"] != "":
                 return lanc["historic"]
