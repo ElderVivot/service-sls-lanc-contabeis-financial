@@ -34,7 +34,7 @@ def removeCharSpecials(text: str):
         'ASCII', 'ignore').decode('ASCII')
     textFormated = u"".join([c for c in nfkd if not unicodedata.combining(c)])
     textFormated = textFormated.replace('\n', ' ').replace('\r', '')
-    return re.sub('[^a-zA-Z0-9.!+:><=[\])|?$(/*,\-_ \\\]', '', textFormated)
+    return re.sub('[^a-zA-Z0-9.!+:>;<=[\])|?$(/*,\-_ \\\]', '', textFormated)
 
 
 def searchPositionFieldForName(header, nameField=''):
@@ -455,10 +455,9 @@ def readCsv(filePath, splitField=';'):
 
     try:
         try:
-            dataFrame = pandas.read_csv(filePath, sep=splitField, encoding='utf-8')
+            dataFrame = pandas.read_csv(filePath, sep=splitField, encoding='utf-8', on_bad_lines='skip')
         except Exception:
-            dataFrame = pandas.read_csv(filePath, sep=splitField, encoding='cp1252')
-        # print(dataFrame)
+            dataFrame = pandas.read_csv(filePath, sep=splitField, encoding='cp1252', on_bad_lines='skip')
 
         dataFrameDropNa = dataFrame.dropna(how='all')
         dataFrameFillNa = dataFrameDropNa.fillna('')
@@ -471,6 +470,26 @@ def readCsv(filePath, splitField=';'):
 
             listOfDataAllRows.append(dataOfRow.copy())
             dataOfRow.clear()
+    except Exception as e:
+        logger.exception(e)
+
+    return listOfDataAllRows
+
+
+def readCsvAsTxt(fileBytesIO, splitField=';'):
+    listOfDataAllRows = []
+
+    bytesIORead = fileBytesIO.read()
+    bytesIODecode = bytesIORead.decode('utf-8', errors='ignore')
+
+    try:
+        for line in bytesIODecode.split('\n'):
+            lineFormated = line.replace('\r', '')
+            lineFormated = treatTextField(lineFormated)
+            lineFormated = f"{splitField}{lineFormated}"
+            lineFormatedSplit = lineFormated.split(splitField)
+            listOfDataAllRows.append(lineFormatedSplit.copy())
+
     except Exception as e:
         logger.exception(e)
 

@@ -38,6 +38,7 @@ class SaveData(object):
         try:
             self.__dataToSave['startPeriod'] = formatDate(self.__dataToSave['startPeriod'])
             self.__dataToSave['endPeriod'] = formatDate(self.__dataToSave['endPeriod'])
+            response = None
 
             lenghtData = len(self.__dataToSave['lancs'])
             lancsOriginal = self.__dataToSave['lancs']

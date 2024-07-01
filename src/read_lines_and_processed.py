@@ -9,7 +9,7 @@ try:
     import logging
     from operator import itemgetter
     from typing import Dict, Any, List
-    from src.functions import readCsv, readExcelPandas, returnDataInDictOrArray, removeAnArrayFromWithinAnother, \
+    from src.functions import readCsvAsTxt, readExcelPandas, returnDataInDictOrArray, removeAnArrayFromWithinAnother, \
         treatTextField, readXlsWithBeautifulSoup, treatNumberField
     from src.get_layout import GetLayout
     from src.save_data import SaveData
@@ -108,7 +108,9 @@ class ReadLinesAndProcessed(object):
                     if historicC.find(text) >= 0:
                         findHistoricToSearch = True
                         valueField = lanc[field]
-                        if valueField != '' and treatNumberField(valueField, isInt=True) > 0:
+                        if valueField != '' and text in ('NF_DOC') and treatNumberField(valueField, isInt=True) > 0:
+                            newHistoric = newHistoric + historicC.replace(text, valueField)
+                        elif valueField != '' and text not in ('NF_DOC'):
                             newHistoric = newHistoric + historicC.replace(text, valueField)
                         else:
                             newHistoric = newHistoric + historicC[posColchete:]
@@ -182,7 +184,7 @@ class ReadLinesAndProcessed(object):
                         if len(dataFile) == 0:
                             dataFile = readXlsWithBeautifulSoup(fileBytesIO)
                     elif fileType == 'csv' and extension in ('csv', 'txt'):
-                        dataFile = readCsv(fileBytesIO)
+                        dataFile = readCsvAsTxt(fileBytesIO)
                     # elif fileType == 'txt' and extension in ('txt', 'html'):
                     #     dataFile = leTxt(file)
                     else:
