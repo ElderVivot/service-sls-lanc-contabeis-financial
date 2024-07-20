@@ -236,7 +236,10 @@ class ReadLinesAndProcessed(object):
                             logger.exception(e)
 
                     lancsThisLayout = checkIfItIsDuplicatedFields(lancsThisLayout, dataSetting)
-                    lancsThisLayout = handleLayoutIsPartidaMultipla(lancsThisLayout, dataSetting)
+                    resultProcessingPartidaMultipla = handleLayoutIsPartidaMultipla(lancsThisLayout, dataSetting)
+                    lancsThisLayout = resultProcessingPartidaMultipla[0]
+                    if resultProcessingPartidaMultipla[1] is True:
+                        self.__dataToSave["listOfColumnsThatHaveValue"].append('numberLote')
                     # lancsThisLayout = self.sumAmountPaidPerLote(lancsThisLayout)
                     self.__dataToSave["lancs"].append(lancsThisLayout.copy())
 

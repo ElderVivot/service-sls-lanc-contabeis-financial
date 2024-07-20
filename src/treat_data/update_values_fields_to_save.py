@@ -33,6 +33,14 @@ def updateValuesFieldsToSave(valuesOfLine: Dict[str, Any]):
     valuesOfLine['accountDebit'] = valuesOfLine['ledgerAccount'] if amountReceived > 0 else ''
     valuesOfLine['accountCredit'] = valuesOfLine['ledgerAccount'] if amountPaid > 0 else ''
 
+    accountProviderClient = returnDataInDictOrArray(valuesOfLine, ['accountProviderClient'])
+    accountProvider = returnDataInDictOrArray(valuesOfLine, ['accountProvider'])
+    accountClient = returnDataInDictOrArray(valuesOfLine, ['accountClient'])
+    if (amountPaidOrReceived < 0 or amountPaid != 0) and (accountProviderClient != '' or accountProvider != ''):
+        valuesOfLine['accountDebit'] = accountProviderClient if accountProviderClient != '' else accountProvider
+    if (amountPaidOrReceived > 0 or amountReceived != 0) and (accountProviderClient != '' or accountClient != ''):
+        valuesOfLine['accountCredit'] = accountProviderClient if accountProviderClient != '' else accountClient
+
     # fields that can null
     valuesOfLine['document'] = returnDataInDictOrArray(valuesOfLine, ['document'])
     valuesOfLine['nameProvider'] = returnDataInDictOrArray(valuesOfLine, ['nameProvider'])

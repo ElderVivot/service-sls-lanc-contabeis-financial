@@ -11,7 +11,7 @@ except Exception as e:
 
 
 def validateIfCnpjOrCpfIsValid(data: Dict[str, Any], dataSetting: Dict[str, Any]):
-    cgce = treatNumberField(returnDataInDictOrArray(data, ['cgceProvider']))
+    cgce = treatNumberField(returnDataInDictOrArray(data, ['cgceProviderClient']))
 
     if cgce is None or cgce == 0:
         return ""

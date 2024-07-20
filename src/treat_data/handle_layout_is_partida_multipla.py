@@ -12,6 +12,7 @@ except Exception as e:
 
 def handleLayoutIsPartidaMultipla(valuesOfFile: List[Dict[str, Any]], dataSetting: Dict[str, Any]):
     valuesOfFilePartidaMultipla = []
+    existLancInLote = False
 
     for key, currentLine in enumerate(valuesOfFile):
         previousLine = returnDataInDictOrArray(valuesOfFile, [key - 1], {})
@@ -26,17 +27,24 @@ def handleLayoutIsPartidaMultipla(valuesOfFile: List[Dict[str, Any]], dataSettin
             valuesOfFilePartidaMultipla.append(currentLine)
             continue  # não tem pq processar as linhas abaixo pq o layout não tem campo agrupador
 
+        lineValidGrouping = True
+
         currentField = ""
         for nameField, valueField in currentLine.items():
             if returnDataInDictOrArray(groupingFields, [nameField], False) is True:
+                if valueField == '':
+                    lineValidGrouping = False
                 currentField = currentField + "-" + treatTextField(valueField)
 
         previousField = ""
         for nameField, valueField in previousLine.items():
             if returnDataInDictOrArray(groupingFields, [nameField], False) is True:
+                if valueField == '':
+                    lineValidGrouping = False
                 previousField = previousField + "-" + treatTextField(valueField)
 
-        if currentField == previousField:
+        if currentField == previousField and lineValidGrouping is True:
+            existLancInLote = True
             currentLine['numberLote'] = numberLote
             valuesOfFilePartidaMultipla.append(currentLine)
         else:
@@ -44,4 +52,4 @@ def handleLayoutIsPartidaMultipla(valuesOfFile: List[Dict[str, Any]], dataSettin
             currentLine['numberLote'] = numberLote
             valuesOfFilePartidaMultipla.append(currentLine)
 
-    return valuesOfFilePartidaMultipla
+    return valuesOfFilePartidaMultipla, existLancInLote
