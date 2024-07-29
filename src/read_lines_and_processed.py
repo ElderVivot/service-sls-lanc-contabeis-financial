@@ -9,7 +9,7 @@ try:
     import logging
     from operator import itemgetter
     from typing import Dict, Any, List
-    from src.functions import readCsvAsTxt, readExcelPandas, returnDataInDictOrArray, removeAnArrayFromWithinAnother, \
+    from src.functions import readCsvAsTxt, readTxt, readExcelPandas, returnDataInDictOrArray, removeAnArrayFromWithinAnother, \
         treatTextField, readXlsWithBeautifulSoup, treatNumberField
     from src.get_layout import GetLayout
     from src.save_data import SaveData
@@ -120,6 +120,7 @@ class ReadLinesAndProcessed(object):
                     newHistoric = newHistoric + historicC
             return treatTextField(newHistoric)
         else:
+            lanc['historic'] = treatTextField(lanc['historic'])
             if lanc["historic"] != "":
                 return lanc["historic"]
             if lanc["document"] != "" and lanc["nameProviderClient"] != "":
@@ -179,14 +180,16 @@ class ReadLinesAndProcessed(object):
 
                     if fileType == 'excel' and extension in ('xlsx', 'xltx'):
                         dataFile = readExcelPandas(fileBytesIO)
+                        if len(dataFile) == 0:
+                            dataFile = readXlsWithBeautifulSoup(fileBytesIO)
                     elif fileType == 'excel' and extension in ('xls'):
                         dataFile = readExcelPandas(fileBytesIO)
                         if len(dataFile) == 0:
                             dataFile = readXlsWithBeautifulSoup(fileBytesIO)
                     elif fileType == 'csv' and extension in ('csv', 'txt'):
                         dataFile = readCsvAsTxt(fileBytesIO)
-                    # elif fileType == 'txt' and extension in ('txt', 'html'):
-                    #     dataFile = leTxt(file)
+                    elif fileType == 'txt' and extension in ('txt', 'html'):
+                        dataFile = readTxt(fileBytesIO, minimalizeSpace=False, ignoreLineBlanks=False)
                     else:
                         dataFile = []
 
@@ -207,7 +210,6 @@ class ReadLinesAndProcessed(object):
                             valuesOfLine = treatDataLayout(data, fields, posionsOfHeader, dataSetting, False, layoutData["fileType"])
                             dataSetting = updateFieldsNotMain(valuesOfLine, fields, dataSetting)
                             valuesOfLine = groupsRowData(valuesOfLine, dataSetting)
-
                             valuesOfLine = updateAmountMovementIfNegative(valuesOfLine)
                             valuesOfLine = correlationBankAndAccountBetweenSettingsAndClient(valuesOfLine, bankAndAccountCorrelation)
 
@@ -226,7 +228,7 @@ class ReadLinesAndProcessed(object):
                                 valuesOfLine["codeHistoric"] = ""
                                 paymentDate = valuesOfLine["paymentDate"]
                                 valuesOfLine["paymentDateAsDate"] = f'{paymentDate[6:]}{paymentDate[3:5]}{paymentDate[0:2]}'
-                                valuesOfLine["historic"] = self.__mountHistoric(valuesOfLine, historicComposition)
+                                valuesOfLine["historic"] = treatTextField(self.__mountHistoric(valuesOfLine, historicComposition))
                                 self.__dataToSave["listOfColumnsThatHaveValue"] = getListColumnsThatHaveValue(self.__dataToSave["listOfColumnsThatHaveValue"], valuesOfLine)
                                 # print(valuesOfLine)
                                 lancsThisLayout.append(valuesOfLine.copy())

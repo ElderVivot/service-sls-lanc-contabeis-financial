@@ -6,12 +6,12 @@ import pandas
 import xlrd
 load_dotenv()
 
-pathFile = 'data/t18.csv'
+pathFile = 'data/t22.txt'
 extension = pathFile.split('.')[1].lower()
 file = open(pathFile, 'rb')
 fileContent = file.read()
 fileBytesIO = io.BytesIO(fileContent)
-ReadLinesAndProcessed().executeJobMainAsync(fileBytesIO, '299fad62-d8e7-4/1fc67022-4e63-457c-af19-d0000b0e2137/ABC', False, extension)
+ReadLinesAndProcessed().executeJobMainAsync(fileBytesIO, '9a43cf2e-6bf5-4/6958f6e4-d8ce-49c4-9929-577baffc5c48/ABC', False, extension)
 
 # 4904e452-9b2c-4/ed5792c9-d944-4dff-bbf1-b4a97af1409f -> ultra
 # 97338620-6e04-4/8ecc4b70-3470-4fb9-90a6-2d6f126bf0fd/ABC -> wise contabilidade

@@ -80,7 +80,7 @@ def treatDataLayout(data: Dict[str, Any], settingFields: Dict[str, Any], positio
 
         positionInFile = int(returnDataInDictOrArray(settingField, ['positionInFile'], -1))
         positionInFile = positionInFile - 1 if fileType == 'txt' else positionInFile
-        positionInFileEnd = returnDataInDictOrArray(settingField, ['positionInFileEnd'], -1)
+        positionInFileEnd = treatNumberField(returnDataInDictOrArray(settingField, ['positionInFileEnd'], -1), isInt=True)
 
         nameColumn = treatTextField(returnDataInDictOrArray(settingField, ['nameColumn']))
         nameColumn = None if nameColumn == "" else nameColumn

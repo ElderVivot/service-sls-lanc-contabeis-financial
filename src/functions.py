@@ -52,7 +52,8 @@ def analyzeIfFieldHasPositionInFileEnd(data, positionInFile, positionInFileEnd):
             return data[positionInFile]
         else:
             return ''.join(data[positionInFile:positionInFileEnd])
-    except Exception:
+    except Exception as e:
+        print(e)
         return ""
 
 
@@ -189,10 +190,14 @@ def treatDateFieldInVector(data, numberOfField=0, fieldsHeader=[], nameFieldHead
             return None
 
 
-def treatTextField(value: str):
+def treatTextField(value: str, minimalizeSpace=True):
     value = str(value)
     try:
-        return minimalizeSpaces(removeCharSpecials(value.strip().upper()))
+        value = removeCharSpecials(value.upper())
+        value = value.replace('−', '-')
+        if minimalizeSpace is True:
+            value = minimalizeSpaces(value.strip())
+        return value
     except Exception:
         return ""
 
@@ -207,20 +212,17 @@ def treatTextFieldInVector(data, numberOfField=0, fieldsHeader=[], nameFieldHead
     """
     if len(fieldsHeader) > 0 and nameFieldHeader is not None and nameFieldHeader != "":
         try:
-            value = data[searchPositionFieldForName(
-                fieldsHeader, nameFieldHeader)]
+            value = data[searchPositionFieldForName(fieldsHeader, nameFieldHeader)]
             return treatTextField(value) if keepTextOriginal is True else value
         except Exception:
             try:
-                value = analyzeIfFieldHasPositionInFileEnd(
-                    data, numberOfField, positionInFileEnd)
+                value = analyzeIfFieldHasPositionInFileEnd(data, numberOfField, positionInFileEnd)
                 return treatTextField(value) if keepTextOriginal is True else value
             except Exception:
                 return ""
     else:
         try:
-            value = analyzeIfFieldHasPositionInFileEnd(
-                data, numberOfField, positionInFileEnd)
+            value = analyzeIfFieldHasPositionInFileEnd(data, numberOfField, positionInFileEnd)
             return treatTextField(value) if keepTextOriginal is True else value
         except Exception:
             return ""
@@ -480,7 +482,10 @@ def readCsvAsTxt(fileBytesIO, splitField=';'):
     listOfDataAllRows = []
 
     bytesIORead = fileBytesIO.read()
-    bytesIODecode = bytesIORead.decode('utf-8', errors='ignore')
+    try:
+        bytesIODecode = bytesIORead.decode('cp1252')
+    except Exception:
+        bytesIODecode = bytesIORead.decode('utf-8', errors='ignore')
 
     try:
         for line in bytesIODecode.split('\n'):
@@ -514,3 +519,26 @@ def readXlsWithBeautifulSoup(fileBytesIO):
             listOfDataAllRows.append(dataOfRow)
 
     return listOfDataAllRows
+
+
+def readTxt(fileBytesIO, minimalizeSpace=True, ignoreLineBlanks=False):
+    newDataDoc = []
+
+    bytesIORead = fileBytesIO.read()
+    try:
+        bytesIODecode = bytesIORead.decode('cp1252')
+    except Exception:
+        bytesIODecode = bytesIORead.decode('utf-8', errors='ignore')
+
+    numberLine = 0
+    for line in bytesIODecode.split('\n'):
+        try:
+            dataValue = treatTextField(line, minimalizeSpace)
+            if ignoreLineBlanks is True and treatTextField(dataValue) == "":
+                continue
+            numberLine += 1
+            newDataDoc.append(dataValue)
+        except Exception as e:
+            print(e)
+
+    return newDataDoc
