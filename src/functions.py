@@ -5,6 +5,7 @@ except ImportError:
 
 try:
     import io
+    import fitz
     import unicodedata
     import logging
     import re
@@ -97,7 +98,7 @@ def treatDecimalField(value, numberOfDecimalPlaces=2, decimalSeparator=','):
         return float(0)
 
 
-def treatDecimalFieldInVector(data, numberOfField=0, fieldsHeader=[], nameFieldHeader='', row='main', positionInFileEnd=0):
+def treatDecimalFieldInVector(data, numberOfField=0, fieldsHeader=[], nameFieldHeader='', row='main', positionInFileEnd=0, fileType=''):
     """
     :param data: Informar o array de dados que quer ler
     :param numberOfField: numero do campo na planilha (opcional)
@@ -109,7 +110,21 @@ def treatDecimalFieldInVector(data, numberOfField=0, fieldsHeader=[], nameFieldH
     if len(fieldsHeader) > 0 and nameFieldHeader is not None and nameFieldHeader != "":
         try:
             if row == 'main':
-                return treatDecimalField(data[searchPositionFieldForName(fieldsHeader, nameFieldHeader)])
+                if fileType == 'pdf':
+                    positionFindText = searchPositionFieldForName(fieldsHeader, nameFieldHeader) - 10
+                    positionFindTextEnd = -1
+                    validGetPos = False
+                    for keyHeader, posHeader in fieldsHeader.items():
+                        if validGetPos is True:
+                            positionFindTextEnd = posHeader
+                            break
+                        if keyHeader == nameFieldHeader:
+                            validGetPos = True
+                    value = data[positionFindText:positionFindTextEnd] if positionFindTextEnd != -1 else data[positionFindText:]
+                    value = treatTextField(value).split(' ')[0]
+                    return treatDecimalField(value)
+                else:
+                    return treatDecimalField(data[searchPositionFieldForName(fieldsHeader, nameFieldHeader)])
             else:
                 return treatDecimalField(analyzeIfFieldHasPositionInFileEnd(data, numberOfField, positionInFileEnd))
         except Exception:
@@ -162,7 +177,7 @@ def treatDateField(valorCampo, formatoData=1):
         return None
 
 
-def treatDateFieldInVector(data, numberOfField=0, fieldsHeader=[], nameFieldHeader='', formatoData=1, row='main', positionInFileEnd=0):
+def treatDateFieldInVector(data, numberOfField=0, fieldsHeader=[], nameFieldHeader='', formatoData=1, row='main', positionInFileEnd=0, fileType=''):
     """
     :param data: Informar o array de dados que quer ler
     :param numberOfField: numero do campo na planilha (opcional)
@@ -175,7 +190,21 @@ def treatDateFieldInVector(data, numberOfField=0, fieldsHeader=[], nameFieldHead
     if len(fieldsHeader) > 0 and nameFieldHeader is not None and nameFieldHeader != "":
         try:
             if row == 'main':
-                return treatDateField(data[searchPositionFieldForName(fieldsHeader, nameFieldHeader)], formatoData)
+                if fileType == 'pdf':
+                    positionFindText = searchPositionFieldForName(fieldsHeader, nameFieldHeader) - 10
+                    positionFindTextEnd = -1
+                    validGetPos = False
+                    for keyHeader, posHeader in fieldsHeader.items():
+                        if validGetPos is True:
+                            positionFindTextEnd = posHeader
+                            break
+                        if keyHeader == nameFieldHeader:
+                            validGetPos = True
+                    value = data[positionFindText:positionFindTextEnd] if positionFindTextEnd != -1 else data[positionFindText:]
+                    value = treatTextField(value).split(' ')[0]
+                    return treatDateField(value, formatoData)
+                else:
+                    return treatDateField(data[searchPositionFieldForName(fieldsHeader, nameFieldHeader)], formatoData)
             else:
                 return treatDateField(analyzeIfFieldHasPositionInFileEnd(data, numberOfField, positionInFileEnd), formatoData)
         except Exception:
@@ -202,7 +231,7 @@ def treatTextField(value: str, minimalizeSpace=True):
         return ""
 
 
-def treatTextFieldInVector(data, numberOfField=0, fieldsHeader=[], nameFieldHeader='', positionInFileEnd=0, keepTextOriginal=True):
+def treatTextFieldInVector(data, numberOfField=0, fieldsHeader=[], nameFieldHeader='', positionInFileEnd=0, keepTextOriginal=True, fileType=''):
     """
     :param data: Informar o array de dados que quer ler
     :param numberOfField: numero do campo na planilha (opcional)
@@ -212,7 +241,19 @@ def treatTextFieldInVector(data, numberOfField=0, fieldsHeader=[], nameFieldHead
     """
     if len(fieldsHeader) > 0 and nameFieldHeader is not None and nameFieldHeader != "":
         try:
-            value = data[searchPositionFieldForName(fieldsHeader, nameFieldHeader)]
+            if fileType == 'pdf':
+                positionFindText = searchPositionFieldForName(fieldsHeader, nameFieldHeader) - 10
+                positionFindTextEnd = -1
+                validGetPos = False
+                for keyHeader, posHeader in fieldsHeader.items():
+                    if validGetPos is True:
+                        positionFindTextEnd = posHeader
+                        break
+                    if keyHeader == nameFieldHeader:
+                        validGetPos = True
+                value = data[positionFindText:positionFindTextEnd] if positionFindTextEnd != -1 else data[positionFindText:]
+            else:
+                value = data[searchPositionFieldForName(fieldsHeader, nameFieldHeader)]
             return treatTextField(value) if keepTextOriginal is True else value
         except Exception:
             try:
@@ -399,6 +440,30 @@ def identifiesAndTransformTypeDataOfSeriesPandas(data):
     return newData
 
 
+def roundValueDataPage(dataPage):
+    newDataPage = []
+    dataPage.sort(key=lambda x: (x[1], x[0]))
+    for numberLine, dataLine in enumerate(dataPage):
+        nextLine = returnDataInDictOrArray(dataPage, [numberLine + 1])
+
+        # update yLine because round not exact
+        yThisLine = dataLine[1]
+        yNextLine = returnDataInDictOrArray(nextLine, [1], 0)
+        if yThisLine + 1 == yNextLine:
+            yThisLine += 1
+
+        # update yLine when is equal nextYLine, because date is first line in process
+        dataNextLine = returnDataInDictOrArray(nextLine, [4], '')
+        dataNextLineField01 = minimalizeSpaces(returnDataInDictOrArray(dataNextLine.split('\n'), [0]))
+        if yThisLine == yNextLine and dataNextLineField01.count('/') == 2:
+            yThisLine += 1
+
+        tupleResult = (round(dataLine[0]), yThisLine, round(dataLine[2]), round(dataLine[3]), dataLine[4], dataLine[5], dataLine[6])
+        newDataPage.append(tupleResult)
+    newDataPage.sort(key=lambda x: (x[1], x[0]))
+    return newDataPage
+
+
 def readExcelPandas(filePath: str, nameSheetToFilter=''):
     listOfDataAllRows = []
     dataOfRow = []
@@ -521,14 +586,17 @@ def readXlsWithBeautifulSoup(fileBytesIO):
     return listOfDataAllRows
 
 
-def readTxt(fileBytesIO, minimalizeSpace=True, ignoreLineBlanks=False):
+def readTxt(fileBytesIO, minimalizeSpace=True, ignoreLineBlanks=False, dataAsByte=True):
     newDataDoc = []
 
-    bytesIORead = fileBytesIO.read()
-    try:
-        bytesIODecode = bytesIORead.decode('cp1252')
-    except Exception:
-        bytesIODecode = bytesIORead.decode('utf-8', errors='ignore')
+    if dataAsByte is True:
+        bytesIORead = fileBytesIO.read()
+        try:
+            bytesIODecode = bytesIORead.decode('cp1252')
+        except Exception:
+            bytesIODecode = bytesIORead.decode('utf-8', errors='ignore')
+    else:
+        bytesIODecode = fileBytesIO
 
     numberLine = 0
     for line in bytesIODecode.split('\n'):
@@ -542,3 +610,50 @@ def readTxt(fileBytesIO, minimalizeSpace=True, ignoreLineBlanks=False):
             print(e)
 
     return newDataDoc
+
+
+def readPdf(fileBytesIO):
+    dataLines = []
+    with fitz.open(stream=fileBytesIO, filetype='pdf') as doc:
+
+        for numberPage, page in enumerate(doc):
+            dataPage = page.get_text("words", sort=True)
+
+            newDataPage = []
+            for numberLine, dataLine in enumerate(dataPage):
+                tupleResult = (round(dataLine[0]), round(dataLine[1]), round(dataLine[2]), round(dataLine[3]), dataLine[4], dataLine[5], dataLine[6])
+                newDataPage.append(tupleResult)
+
+            # order by 3 times, because some number dont round correct
+            newDataPage = roundValueDataPage(newDataPage)
+            newDataPage = roundValueDataPage(newDataPage)
+            newDataPage = roundValueDataPage(newDataPage)
+
+            numberLineBefore = 0
+            positionTextBefore = 0
+            if numberPage >= 0:
+                for data in newDataPage:
+                    positionText = data[0]
+                    numberLine = data[1]
+                    valueField = ''
+                    if numberLine == numberLineBefore:
+                        for _ in range(positionTextBefore, positionText - len(data[4]), 1):
+                            valueField += ' '
+                        valueField += data[4]
+
+                        dataLine += valueField
+                    else:
+                        numberLineBefore = 0
+                        positionTextBefore = 0
+                        dataLines.append(dataLine)
+                        dataLine = ''
+
+                        for _ in range(positionTextBefore, positionText - len(data[4]), 1):
+                            valueField += ' '
+                        valueField += data[4]
+
+                        dataLine += valueField
+                    numberLineBefore = numberLine
+                    positionTextBefore = positionText
+
+    return dataLines

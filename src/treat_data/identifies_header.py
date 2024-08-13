@@ -10,7 +10,7 @@ except Exception as e:
     print(f"Error importing libraries {e}")
 
 
-def identifiesTheHeader(data: Dict[str, Any], settingLayout: Dict[str, Any]):
+def identifiesTheHeader(data: Dict[str, Any], settingLayout: Dict[str, Any], fileType=''):
     # :data são os valores de cada "linha" dos arquivos processados
     # :settingLayout é a configuração do layout que está no banco de dados
 
@@ -22,8 +22,12 @@ def identifiesTheHeader(data: Dict[str, Any], settingLayout: Dict[str, Any]):
     if len(header) == 0:
         return None
 
+    if fileType in ('pdf', 'txt') and str(type(data)).find('str') >= 0:
+        data = data.split(' ')
+
     for field in data:
-        dataManipulate.append(treatTextField(field))
+        textField = treatTextField(field)
+        dataManipulate.append(textField)
 
     countNumberHeader = 0
     for field in header:

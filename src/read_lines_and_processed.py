@@ -9,7 +9,8 @@ try:
     import logging
     from operator import itemgetter
     from typing import Dict, Any, List
-    from src.functions import readCsvAsTxt, readTxt, readExcelPandas, returnDataInDictOrArray, removeAnArrayFromWithinAnother, \
+    from src.convert_txt import ConvertTxt
+    from src.functions import readCsvAsTxt, readTxt, readExcelPandas, readPdf, returnDataInDictOrArray, removeAnArrayFromWithinAnother, \
         treatTextField, readXlsWithBeautifulSoup, treatNumberField
     from src.get_layout import GetLayout
     from src.save_data import SaveData
@@ -190,16 +191,18 @@ class ReadLinesAndProcessed(object):
                         dataFile = readCsvAsTxt(fileBytesIO)
                     elif fileType == 'txt' and extension in ('txt', 'html'):
                         dataFile = readTxt(fileBytesIO, minimalizeSpace=False, ignoreLineBlanks=False)
+                    elif fileType == 'pdf' and extension in ('pdf'):
+                        dataFile = readPdf(fileBytesIO)
                     else:
                         dataFile = []
 
                     for numberLine, data in enumerate(dataFile):
                         # print(numberLine, '----', data)
                         try:
-                            posionsOfHeaderTemp = identifiesTheHeader(data, layoutData)
-                            if posionsOfHeaderTemp is not None and len(posionsOfHeaderTemp) > 0:
-                                if len(posionsOfHeaderTemp.items()) > 0:
-                                    posionsOfHeader = posionsOfHeaderTemp
+                            positionsOfHeaderTemp = identifiesTheHeader(data, layoutData, fileType)
+                            if positionsOfHeaderTemp is not None and len(positionsOfHeaderTemp) > 0:
+                                if len(positionsOfHeaderTemp.items()) > 0:
+                                    posionsOfHeader = positionsOfHeaderTemp
                                     continue
 
                             # quando as informações complementares estão uma linha abaixo da principal então lê ela primeiro e atualiza os campos notMain

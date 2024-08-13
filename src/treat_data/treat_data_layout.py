@@ -119,7 +119,7 @@ def treatDataLayout(data: Dict[str, Any], settingFields: Dict[str, Any], positio
         positionFieldInTheSplit = treatNumberField(returnDataInDictOrArray(settingField, ['positionFieldInTheSplit'], 0), isInt=True)
         positionFieldInTheSplitEnd = treatNumberField(returnDataInDictOrArray(settingField, ['positionFieldInTheSplitEnd'], 0), isInt=True)  # o zero determina que não tem fim, é daquele campo pra frente
 
-        valueField = treatTextFieldInVector(data, positionInFile, positionsOfHeaderCorrect, nameColumn, positionInFileEnd=positionInFileEnd)
+        valueField = treatTextFieldInVector(data, positionInFile, positionsOfHeaderCorrect, nameColumn, positionInFileEnd=positionInFileEnd, fileType=fileType)
         valueField = "" if positionInFile <= 0 and nameColumn is None else valueField
 
         if splitField != "":
@@ -155,7 +155,7 @@ def treatDataLayout(data: Dict[str, Any], settingFields: Dict[str, Any], positio
             if splitField != "":
                 valueField = treatDateField(valueField, formatDate)
             else:
-                valueField = treatDateFieldInVector(data, positionInFile, positionsOfHeaderCorrect, nameColumn, formatDate, rowIsMain, positionInFileEnd=positionInFileEnd)
+                valueField = treatDateFieldInVector(data, positionInFile, positionsOfHeaderCorrect, nameColumn, formatDate, rowIsMain, positionInFileEnd=positionInFileEnd, fileType=fileType)
                 valueField = None if positionInFile <= 0 and nameColumn is None else valueField
 
         elif nameField.lower().find('amount') >= 0:
@@ -163,7 +163,7 @@ def treatDataLayout(data: Dict[str, Any], settingFields: Dict[str, Any], positio
                 valueField = treatDecimalField(valueField)
             else:
                 valueFieldOriginal = valueField
-                valueField = treatDecimalFieldInVector(data, positionInFile, positionsOfHeaderCorrect, nameColumn, positionInFileEnd=positionInFileEnd)
+                valueField = treatDecimalFieldInVector(data, positionInFile, positionsOfHeaderCorrect, nameColumn, positionInFileEnd=positionInFileEnd, fileType=fileType)
                 valueField = 0 if positionInFile <= 0 and nameColumn is None else round(valueField, 2)
                 try:
                     if valueFieldOriginal[-1] == 'D':
