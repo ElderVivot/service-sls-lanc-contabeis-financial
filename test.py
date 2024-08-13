@@ -5,7 +5,6 @@ import io
 import pandas
 import xlrd
 import pandas as pd
-import tabula
 load_dotenv()
 
 pathFile = 'data/t23.pdf'

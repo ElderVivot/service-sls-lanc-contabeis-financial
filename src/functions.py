@@ -48,6 +48,8 @@ def searchPositionFieldForName(header, nameField=''):
 
 
 def analyzeIfFieldHasPositionInFileEnd(data, positionInFile, positionInFileEnd):
+    positionInFile = int(positionInFile)
+    positionInFileEnd = int(positionInFileEnd)
     try:
         if positionInFileEnd <= 0:
             return data[positionInFile]
