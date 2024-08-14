@@ -10,13 +10,13 @@ except Exception as e:
     print(f"Error importing libraries {e}")
 
 
-def handleLayoutIsPartidaMultipla(valuesOfFile: List[Dict[str, Any]], dataSetting: Dict[str, Any]):
+def handleLayoutIsPartidaMultipla(valuesOfFile: List[Dict[str, Any]], dataSetting: Dict[str, Any], numberLoteInitial=0):
     valuesOfFilePartidaMultipla = []
     existLancInLote = False
 
     for key, currentLine in enumerate(valuesOfFile):
         previousLine = returnDataInDictOrArray(valuesOfFile, [key - 1], {})
-        numberLote = returnDataInDictOrArray(previousLine, ["numberLote"], 0)
+        numberLote = returnDataInDictOrArray(previousLine, ["numberLote"], numberLoteInitial)
 
         groupingFields = dataSetting['groupingFields']
 

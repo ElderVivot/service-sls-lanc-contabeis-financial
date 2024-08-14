@@ -7,12 +7,12 @@ import xlrd
 import pandas as pd
 load_dotenv()
 
-pathFile = 'data/t23.pdf'
+pathFile = 'data/t24.xlsx'
 extension = pathFile.split('.')[1].lower()
 file = open(pathFile, 'rb')
 fileContent = file.read()
 fileBytesIO = io.BytesIO(fileContent)
-ReadLinesAndProcessed().executeJobMainAsync(fileBytesIO, '42d48d08-2dfa-4/67ca0f71-013b-4d45-9928-d0225a46ecd2/ABC', False, extension)
+ReadLinesAndProcessed().executeJobMainAsync(fileBytesIO, 'fc90b17c-88a9-4/99d92553-f8d6-4627-bc1f-ed1f8cc43ea5/ABC', False, extension)
 
 
 # tabula.convert_into(pathFile, output_path='data/t23.tsv', stream=True, pages='all', output_format='tsv')

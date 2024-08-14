@@ -142,6 +142,7 @@ class ReadLinesAndProcessed(object):
         self.__dataToSave["endPeriod"] = ""
         self.__dataToSave["lancs"]: List[Dict[str, Any]] = []
         self.__dataToSave["listOfColumnsThatHaveValue"]: List[str] = []
+        numberLoteInitial = 0
 
         try:
             getLayout = GetLayout()
@@ -241,10 +242,11 @@ class ReadLinesAndProcessed(object):
                             logger.exception(e)
 
                     lancsThisLayout = checkIfItIsDuplicatedFields(lancsThisLayout, dataSetting)
-                    resultProcessingPartidaMultipla = handleLayoutIsPartidaMultipla(lancsThisLayout, dataSetting)
+                    resultProcessingPartidaMultipla = handleLayoutIsPartidaMultipla(lancsThisLayout, dataSetting, numberLoteInitial)
                     lancsThisLayout = resultProcessingPartidaMultipla[0]
                     if resultProcessingPartidaMultipla[1] is True:
                         self.__dataToSave["listOfColumnsThatHaveValue"].append('numberLote')
+                    numberLoteInitial = returnDataInDictOrArray(lancsThisLayout, [-1, 'numberLote'], 0)
                     # lancsThisLayout = self.sumAmountPaidPerLote(lancsThisLayout)
                     self.__dataToSave["lancs"].append(lancsThisLayout.copy())
 
