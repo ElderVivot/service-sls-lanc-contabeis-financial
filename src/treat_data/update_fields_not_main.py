@@ -33,7 +33,7 @@ def updateFieldsNotMain(data: Dict[str, Any], settingFields: Dict[str, Any], dat
                 lineThatTheDataIs = None
 
             # faz validação dos campos pra ver se devem ser atualizados as informações ou não
-            if lineThatTheDataIs is not None:
+            if lineThatTheDataIs is not None and lineThatTheDataIs != '':
                 dataSetting['fieldsRowNotMain'][nameField] = valueField
 
     return dataSetting

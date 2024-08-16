@@ -47,6 +47,9 @@ class SaveData(object):
             messageLogOriginal = self.__dataToSave['messageLogToShowUser']
             urlFile = self.__dataToSave['url'].split('/')[-1]
 
+            if lenghtData == 0:
+                await self.__saveDataApiRelational('put')
+
             async with ClientSession() as session:
                 for idx in range(0, lenghtData, 5000):
                     loopProcessing += 1

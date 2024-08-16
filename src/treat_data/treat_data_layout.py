@@ -109,8 +109,8 @@ def treatDataLayout(data: Dict[str, Any], settingFields: Dict[str, Any], positio
             continue
 
         # se a linha for "not_main" mas o isRowCorrect não retornar resultado, então quer dizer que aquele campo não é daquela linha not_main. Pode ser de outra.
-        if rowIsMain == "not_main" and isRowCorrect is False:
-            continue
+        # if rowIsMain == "not_main" and isRowCorrect is False:
+        #     continue
 
         if readOnlyIfLineBelowTheMain is True and (isRowCorrect is False or informationIsOnOneLineBelowTheMain is False):
             continue
