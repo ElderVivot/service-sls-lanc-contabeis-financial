@@ -8,7 +8,7 @@ try:
     import boto3
     import os
     from src.read_lines_and_processed import ReadLinesAndProcessed
-    from src.functions import readExcelPandas
+    from src.functions import readExcelPandas, returnDataInDictOrArray
 except Exception as e:
     print("Error importing libraries", e)
 
@@ -23,8 +23,10 @@ def main(event, context):
 
     for item in event.get("Records"):
         eventSource = item.get('eventSource')
+        layoutFilter = ''
         if eventSource == 'aws:dynamodb':
             url = item.get("dynamodb").get('NewImage').get('url').get('S')
+            layoutFilter = returnDataInDictOrArray(item, ['dynamodb', 'NewImage', 'layoutFilter', 'S'])
             urlSplit = url.split('/')
             bucket = urlSplit[2].split('.')[0]
             key = '/'.join(urlSplit[3:])
@@ -42,4 +44,4 @@ def main(event, context):
             fileBytesIO = io.BytesIO(fileContent)
 
         extension = extension.lower()
-        ReadLinesAndProcessed().executeJobMainAsync(fileBytesIO, key, True, extension)
+        ReadLinesAndProcessed().executeJobMainAsync(fileBytesIO, key, True, extension, layoutFilter=layoutFilter)

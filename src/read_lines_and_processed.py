@@ -130,7 +130,7 @@ class ReadLinesAndProcessed(object):
                 return lanc["nameProviderClient"]
             return ""
 
-    async def __readLinesAndProcessed(self, fileBytesIO: List[Any], key: str, saveDatabase=True, extension='xlsx'):
+    async def __readLinesAndProcessed(self, fileBytesIO: List[Any], key: str, saveDatabase=True, extension='xlsx', layoutFilter=''):
         self.__dataToSave["url"] = key
         self.__dataToSave["id"] = self.__getId(key)
         self.__dataToSave["tenant"] = self.__getTenant(key)
@@ -169,6 +169,11 @@ class ReadLinesAndProcessed(object):
                     fileType = layoutData['fileType']
                     splitFile = layoutData['splitFile']
 
+                    nameLayout = treatTextField(layoutData['system'])
+                    if layoutFilter not in ('', 'all', 'ALL'):
+                        if nameLayout.find(layoutFilter) < 0:
+                            continue
+
                     analyzeSetting = analyzeSettingFields(layoutData["fields"], dataSetting)
                     fields = analyzeSetting["fieldsValidated"]
                     dataSetting = analyzeSetting["dataSetting"]
@@ -180,7 +185,7 @@ class ReadLinesAndProcessed(object):
                     bankAndAccountCorrelation = returnDataInDictOrArray(layout, ["bankAndAccountCorrelation"])
                     validateIfDataIsThisCompanie = returnDataInDictOrArray(layout, ["validateIfDataIsThisCompanie"])
 
-                    if fileType == 'excel' and extension in ('xlsx', 'xltx'):
+                    if fileType == 'excel' and extension in ('xlsx', 'xltx', 'ods'):
                         dataFile = readExcelPandas(fileBytesIO)
                         if len(dataFile) == 0:
                             dataFile = readXlsWithBeautifulSoup(fileBytesIO)
@@ -303,8 +308,8 @@ class ReadLinesAndProcessed(object):
             await saveData.saveData()
             logger.exception(e)
 
-    def executeJobMainAsync(self, fileBytesIO: List[Any], key: str, saveDatabase=True, extension='xlsx'):
+    def executeJobMainAsync(self, fileBytesIO: List[Any], key: str, saveDatabase=True, extension='xlsx', layoutFilter=''):
         try:
-            asyncio.run(self.__readLinesAndProcessed(fileBytesIO, key, saveDatabase, extension))
+            asyncio.run(self.__readLinesAndProcessed(fileBytesIO, key, saveDatabase, extension, layoutFilter))
         except Exception as e:
             logger.exception(e)

@@ -272,7 +272,7 @@ def treatTextFieldInVector(data, numberOfField=0, fieldsHeader=[], nameFieldHead
 
 
 def treatNumberField(value, isInt=False):
-    if type(value) == int:
+    if type(value) == int or str(type(value)).find('numpy.int') >= 0:
         return value
     try:
         value = re.sub("[^0-9]", '', value)

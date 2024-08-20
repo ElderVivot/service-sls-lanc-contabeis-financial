@@ -39,18 +39,18 @@ functions:
     layers:
       - Ref: PythonRequirementsLambdaLayer
     events:
-      - s3:
-          bucket: cont-financial-files
-          event: s3:ObjectCreated:*
-          existing: true
-          forceDeploy: true
       - stream:
           arn: arn:aws:dynamodb:us-east-2:128628664119:table/reprocess-lanc-cont-financial/stream/2023-10-25T08:55:26.880
           batchSize: 1
           startingPosition: LATEST
           maximumRetryAttempts: 0
-          maximumRecordAgeInSeconds: 60
+          maximumRecordAgeInSeconds: 600
           filterPatterns:
             - {
                 eventName: [INSERT, MODIFY]
               }
+      # - s3:
+      #     bucket: cont-financial-files
+      #     event: s3:ObjectCreated:*
+      #     existing: true
+      #     forceDeploy: true
