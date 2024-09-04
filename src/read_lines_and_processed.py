@@ -109,7 +109,7 @@ class ReadLinesAndProcessed(object):
                     if historicC.find(text) >= 0:
                         findHistoricToSearch = True
                         valueField = lanc[field]
-                        if valueField != '' and text in ('NF_DOC') and treatNumberField(valueField, isInt=True) > 0:
+                        if valueField != '' and text in ('NF_DOC'):  # and treatNumberField(valueField, isInt=True) > 0:
                             newHistoric = newHistoric + historicC.replace(text, valueField)
                         elif valueField != '' and text not in ('NF_DOC'):
                             newHistoric = newHistoric + historicC.replace(text, valueField)
