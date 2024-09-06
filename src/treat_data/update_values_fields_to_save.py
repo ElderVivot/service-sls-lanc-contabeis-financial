@@ -24,6 +24,11 @@ def updateValuesFieldsToSave(valuesOfLine: Dict[str, Any]):
     valuesOfLine['dueDate'] = formatDate(returnDataInDictOrArray(valuesOfLine, ['dueDate']), '%d/%m/%Y')
     valuesOfLine['issueDate'] = formatDate(returnDataInDictOrArray(valuesOfLine, ['issueDate']), '%d/%m/%Y')
 
+    accountDebit = returnDataInDictOrArray(valuesOfLine, ['accountDebit'])
+    accountCredit = returnDataInDictOrArray(valuesOfLine, ['accountCredit'])
+
+    valuesOfLine['codeHistoric'] = returnDataInDictOrArray(valuesOfLine, ['codeHistoric'])
+
     nameProvider = returnDataInDictOrArray(valuesOfLine, ['nameProvider'])
     nameClient = returnDataInDictOrArray(valuesOfLine, ['nameClient'])
     nameProviderClient = returnDataInDictOrArray(valuesOfLine, ['nameProviderClient'])
@@ -40,6 +45,9 @@ def updateValuesFieldsToSave(valuesOfLine: Dict[str, Any]):
         valuesOfLine['accountDebit'] = accountProviderClient if accountProviderClient != '' else accountProvider
     if (amountPaidOrReceived > 0 or amountReceived != 0) and (accountProviderClient != '' or accountClient != ''):
         valuesOfLine['accountCredit'] = accountProviderClient if accountProviderClient != '' else accountClient
+
+    valuesOfLine['accountDebit'] = accountDebit if accountDebit != '' else valuesOfLine['accountDebit']
+    valuesOfLine['accountCredit'] = accountCredit if accountCredit != '' else valuesOfLine['accountCredit']
 
     # fields that can null
     valuesOfLine['document'] = returnDataInDictOrArray(valuesOfLine, ['document'])
