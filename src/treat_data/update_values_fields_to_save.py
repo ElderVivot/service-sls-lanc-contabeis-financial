@@ -28,6 +28,10 @@ def updateValuesFieldsToSave(valuesOfLine: Dict[str, Any]):
     accountCredit = returnDataInDictOrArray(valuesOfLine, ['accountCredit'])
 
     valuesOfLine['codeHistoric'] = returnDataInDictOrArray(valuesOfLine, ['codeHistoric'])
+    valuesOfLine['typeLanc'] = returnDataInDictOrArray(valuesOfLine, ['typeLanc'])
+    valuesOfLine['typeDocument'] = returnDataInDictOrArray(valuesOfLine, ['typeDocument'])
+    valuesOfLine['codeParticipante'] = returnDataInDictOrArray(valuesOfLine, ['codeParticipante'])
+    valuesOfLine['codeImovel'] = returnDataInDictOrArray(valuesOfLine, ['codeImovel'])
 
     nameProvider = returnDataInDictOrArray(valuesOfLine, ['nameProvider'])
     nameClient = returnDataInDictOrArray(valuesOfLine, ['nameClient'])
