@@ -119,8 +119,14 @@ def treatDataLayout(data: Dict[str, Any], settingFields: Dict[str, Any], positio
         positionFieldInTheSplit = treatNumberField(returnDataInDictOrArray(settingField, ['positionFieldInTheSplit'], 0), isInt=True)
         positionFieldInTheSplitEnd = treatNumberField(returnDataInDictOrArray(settingField, ['positionFieldInTheSplitEnd'], 0), isInt=True)  # o zero determina que não tem fim, é daquele campo pra frente
 
+        getByNameTab = False
+        if positionInFile == -10:
+            positionInFile = 0
+            getByNameTab = True
         valueField = treatTextFieldInVector(data, positionInFile, positionsOfHeaderCorrect, nameColumn, positionInFileEnd=positionInFileEnd, fileType=fileType)
-        valueField = "" if positionInFile <= 0 and nameColumn is None else valueField
+        valueField = "" if positionInFile <= 0 and getByNameTab is False and nameColumn is None else valueField
+        # if getByNameTab is True:
+        #     print(valueField)
 
         if splitField != "":
             valueField = valueField.split(splitField)
