@@ -18,7 +18,7 @@ def updateAmountMovementIfNegative(valuesOfLine: Dict[str, Any]):
     typeMoviment = returnDataInDictOrArray(valuesOfLine, ['typeMoviment'], None)
     if typeMoviment is not None:
         typeMoviment = typeMoviment[:3]
-        if typeMoviment in ('D', 'DEB', 'SAI', 'PAG'):
+        if typeMoviment in ('D', 'DEB', 'SAI', 'PAG', 'PRO'):
             if amountPaidOrReceived > 0:
                 valuesOfLine['amountPaidOrReceived'] = amountPaidOrReceived * -1
     return valuesOfLine
