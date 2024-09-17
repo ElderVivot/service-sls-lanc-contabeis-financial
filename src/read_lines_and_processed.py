@@ -32,6 +32,7 @@ try:
     from src.treat_data.handle_layout_is_partida_multipla import handleLayoutIsPartidaMultipla
     from src.treat_data.check_columns_that_have_value import getListColumnsThatHaveValue
     from src.treat_data.update_amount_movement_if_negative import updateAmountMovementIfNegative
+    from src.treat_data.handle_group_by_lancs_by_some_fields import handleGroupByLancsBySomeFields
 except Exception as e:
     print(f"Error importing libraries {e}")
 
@@ -64,6 +65,7 @@ class ReadLinesAndProcessed(object):
         return {
             "fieldsRowNotMain": {},
             "groupingFields": {},
+            "groupingLancsByFields": {},
             "linesOfFile": [],
             "considerToCheckIfItIsDuplicatedFields": {},
             "fieldsThatMultiplePerLessOne": {},
@@ -143,6 +145,7 @@ class ReadLinesAndProcessed(object):
         self.__dataToSave["lancs"]: List[Dict[str, Any]] = []
         self.__dataToSave["listOfColumnsThatHaveValue"]: List[str] = []
         numberLoteInitial = 0
+        existTypeMovimentAsProventoFolha = False
 
         try:
             getLayout = GetLayout()
@@ -201,6 +204,7 @@ class ReadLinesAndProcessed(object):
                         dataFile = readPdf(fileBytesIO)
                     else:
                         dataFile = []
+                    # print(dataFile)
 
                     for numberLine, data in enumerate(dataFile):
                         # print(numberLine, '----', data)
@@ -219,7 +223,13 @@ class ReadLinesAndProcessed(object):
                             valuesOfLine = treatDataLayout(data, fields, posionsOfHeader, dataSetting, False, layoutData["fileType"])
                             dataSetting = updateFieldsNotMain(valuesOfLine, fields, dataSetting)
                             valuesOfLine = groupsRowData(valuesOfLine, dataSetting)
-                            valuesOfLine = updateAmountMovementIfNegative(valuesOfLine)
+
+                            typeMoviment = returnDataInDictOrArray(valuesOfLine, ['typeMoviment'], '')
+                            if typeMoviment == 'P':
+                                existTypeMovimentAsProventoFolha = True
+
+                            valuesOfLine = updateAmountMovementIfNegative(valuesOfLine, existTypeMovimentAsProventoFolha)
+
                             valuesOfLine = correlationBankAndAccountBetweenSettingsAndClient(valuesOfLine, bankAndAccountCorrelation)
 
                             valuesOfLine["cgceProviderClient"] = validateIfCnpjOrCpfIsValid(valuesOfLine, dataSetting)
@@ -247,7 +257,8 @@ class ReadLinesAndProcessed(object):
                             logger.exception(e)
 
                     lancsThisLayout = checkIfItIsDuplicatedFields(lancsThisLayout, dataSetting)
-                    resultProcessingPartidaMultipla = handleLayoutIsPartidaMultipla(lancsThisLayout, dataSetting, numberLoteInitial)
+                    resultProcessingGroupingLancs = handleGroupByLancsBySomeFields(lancsThisLayout, dataSetting)
+                    resultProcessingPartidaMultipla = handleLayoutIsPartidaMultipla(resultProcessingGroupingLancs, dataSetting, numberLoteInitial)
                     lancsThisLayout = resultProcessingPartidaMultipla[0]
                     if resultProcessingPartidaMultipla[1] is True:
                         self.__dataToSave["listOfColumnsThatHaveValue"].append('numberLote')

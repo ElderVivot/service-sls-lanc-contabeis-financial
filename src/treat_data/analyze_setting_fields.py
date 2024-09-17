@@ -26,6 +26,11 @@ def analyzeSettingFields(settingFields: Dict[str, Any], dataSetting: Dict[str, A
         if groupingField is True:
             dataSetting["groupingFields"][nameField] = True
 
+        # --- este agrupamento é pra fazer a leitura de quando for um registro com vários débito pra vários créditos
+        groupingLancsByField = returnDataInDictOrArray(settingField, ['groupingLancsByField'], False)
+        if groupingLancsByField is True:
+            dataSetting["groupingLancsByFields"][nameField] = True
+
         considerToCheckIfItIsDuplicatedFields = returnDataInDictOrArray(settingField, ['considerToCheckIfItIsDuplicated'], False)
         if considerToCheckIfItIsDuplicatedFields is True:
             dataSetting["considerToCheckIfItIsDuplicatedFields"][nameField] = True
