@@ -56,4 +56,18 @@ def handleGroupByLancsBySomeFields(valuesOfFile: List[Dict[str, Any]], dataSetti
         else:
             valuesOfFileGroupingLancs.append(currentLine.copy())
 
+    for key, currentLine in enumerate(valuesOfFileGroupingLancs):
+        try:
+            valuesOfFileGroupingLancs[key]['amountMoviment'] = round(currentLine['amountMoviment'], 2)
+            valuesOfFileGroupingLancs[key]['amountPaid'] = round(currentLine['amountPaid'], 2)
+            valuesOfFileGroupingLancs[key]['amountReceived'] = round(currentLine['amountReceived'], 2)
+            valuesOfFileGroupingLancs[key]['amountPaidOrReceived'] = round(currentLine['amountPaidOrReceived'], 2)
+            valuesOfFileGroupingLancs[key]['amountOriginal'] = round(currentLine['amountOriginal'], 2)
+            valuesOfFileGroupingLancs[key]['amountInterest'] = round(currentLine['amountInterest'], 2)
+            valuesOfFileGroupingLancs[key]['amountFine'] = round(currentLine['amountFine'], 2)
+            valuesOfFileGroupingLancs[key]['amountDiscount'] = round(currentLine['amountDiscount'], 2)
+            valuesOfFileGroupingLancs[key]['amountRate'] = round(currentLine['amountRate'], 2)
+        except Exception as e:
+            print(e)
+
     return valuesOfFileGroupingLancs
