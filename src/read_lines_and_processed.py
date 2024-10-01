@@ -4,6 +4,7 @@ except ImportError:
     pass
 
 try:
+    import io
     import asyncio
     import datetime
     import logging
@@ -11,7 +12,7 @@ try:
     from typing import Dict, Any, List
     from src.convert_txt import ConvertTxt
     from src.functions import readCsvAsTxt, readTxt, readExcelPandas, readPdf, returnDataInDictOrArray, removeAnArrayFromWithinAnother, \
-        treatTextField, readXlsWithBeautifulSoup, treatNumberField
+        treatTextField, readXlsWithBeautifulSoup, treatNumberField, minimalizeSpaces
     from src.get_layout import GetLayout
     from src.save_data import SaveData
     from src.treat_data.analyze_setting_fields import analyzeSettingFields
@@ -33,6 +34,7 @@ try:
     from src.treat_data.check_columns_that_have_value import getListColumnsThatHaveValue
     from src.treat_data.update_amount_movement_if_negative import updateAmountMovementIfNegative
     from src.treat_data.handle_group_by_lancs_by_some_fields import handleGroupByLancsBySomeFields
+    from src.treat_data.ignore_lines_dont_read import ignoreLinesDontRead
 except Exception as e:
     print(f"Error importing libraries {e}")
 
@@ -70,6 +72,7 @@ class ReadLinesAndProcessed(object):
             "considerToCheckIfItIsDuplicatedFields": {},
             "fieldsThatMultiplePerLessOne": {},
             "validationsLineToPrint": [],
+            "linesToIgnore": [],
             "sumInterestFineAndDiscount": False,
             "calcDifferencePaidOriginalAsInterestDiscount": False,
             "validateIfCnpjOrCpfIsValid": False,
@@ -132,7 +135,7 @@ class ReadLinesAndProcessed(object):
                 return lanc["nameProviderClient"]
             return ""
 
-    async def __readLinesAndProcessed(self, fileBytesIO: List[Any], key: str, saveDatabase=True, extension='xlsx', layoutFilter=''):
+    async def __readLinesAndProcessed(self, fileBytesIO: io.FileIO, key: str, saveDatabase=True, extension='xlsx', layoutFilter=''):
         self.__dataToSave["url"] = key
         self.__dataToSave["id"] = self.__getId(key)
         self.__dataToSave["tenant"] = self.__getTenant(key)
@@ -171,6 +174,13 @@ class ReadLinesAndProcessed(object):
 
                     fileType = layoutData['fileType']
                     splitFile = layoutData['splitFile']
+                    splitFilePDFBySpace = returnDataInDictOrArray(layoutData, ['splitFilePDFBySpace'], False)
+                    qtdCharsToConsiderSplitBySpace = treatNumberField(returnDataInDictOrArray(layoutData, ['qtdCharsToConsiderSplitBySpace'], 1), isInt=True)
+                    charsToSplitBySpace = ''
+                    for _ in range(0, qtdCharsToConsiderSplitBySpace):
+                        charsToSplitBySpace += ' '
+                    if len(charsToSplitBySpace) <= 1:
+                        charsToSplitBySpace = '  '
 
                     nameLayout = treatTextField(layoutData['system'])
                     if layoutFilter not in ('', 'all', 'ALL'):
@@ -182,6 +192,7 @@ class ReadLinesAndProcessed(object):
                     dataSetting = analyzeSetting["dataSetting"]
 
                     dataSetting["validationsLineToPrint"] = returnDataInDictOrArray(layoutData, ["validationLineToPrint"], [])
+                    dataSetting["linesToIgnore"] = returnDataInDictOrArray(layoutData, ["linesToIgnore"], [])
                     dataSetting["linesOfFile"] = returnDataInDictOrArray(layoutData, ["linesOfFile"], [])
                     historicComposition = treatTextField(returnDataInDictOrArray(layoutData, ["historicComposition"]))
 
@@ -200,11 +211,18 @@ class ReadLinesAndProcessed(object):
                         dataFile = readCsvAsTxt(fileBytesIO)
                     elif fileType == 'txt' and extension in ('txt', 'html'):
                         dataFile = readTxt(fileBytesIO, minimalizeSpace=False, ignoreLineBlanks=False)
-                    elif fileType == 'pdf' and extension in ('pdf'):
+                    elif fileType == 'pdf' and extension in ('pdf') and splitFilePDFBySpace is False:
                         dataFile = readPdf(fileBytesIO)
+                    elif fileType == 'pdf' and extension in ('pdf') and splitFilePDFBySpace is True:
+                        convertTxt = ConvertTxt()
+                        pdfResult = convertTxt.pdfToText(fileBytesIO)
+                        charsSpaceReplace = charsToSplitBySpace if len(charsToSplitBySpace) > 2 else '  '
+                        dataFile = readTxt(pdfResult, dataAsByte=False, minimalizeSpace=False, charsSpaceReplace=charsSpaceReplace)
                     else:
                         dataFile = []
-                    # print(dataFile)
+
+                    if fileType in ('pdf', 'txt'):
+                        dataFile = ignoreLinesDontRead(dataFile, dataSetting)
 
                     for numberLine, data in enumerate(dataFile):
                         # print(numberLine, '----', data)
@@ -217,10 +235,10 @@ class ReadLinesAndProcessed(object):
 
                             # quando as informações complementares estão uma linha abaixo da principal então lê ela primeiro e atualiza os campos notMain
                             nextData = returnDataInDictOrArray(dataFile, [numberLine + 1])
-                            valuesOfLine = treatDataLayout(nextData, fields, posionsOfHeader, dataSetting, True, layoutData["fileType"])
+                            valuesOfLine = treatDataLayout(nextData, fields, posionsOfHeader, dataSetting, True, layoutData["fileType"], splitFilePDFBySpace, charsToSplitBySpace)
                             dataSetting = updateFieldsNotMain(valuesOfLine, fields, dataSetting)
 
-                            valuesOfLine = treatDataLayout(data, fields, posionsOfHeader, dataSetting, False, layoutData["fileType"])
+                            valuesOfLine = treatDataLayout(data, fields, posionsOfHeader, dataSetting, False, layoutData["fileType"], splitFilePDFBySpace, charsToSplitBySpace)
                             dataSetting = updateFieldsNotMain(valuesOfLine, fields, dataSetting)
                             valuesOfLine = groupsRowData(valuesOfLine, dataSetting)
 
@@ -319,7 +337,7 @@ class ReadLinesAndProcessed(object):
             await saveData.saveData()
             logger.exception(e)
 
-    def executeJobMainAsync(self, fileBytesIO: List[Any], key: str, saveDatabase=True, extension='xlsx', layoutFilter=''):
+    def executeJobMainAsync(self, fileBytesIO: io.FileIO, key: str, saveDatabase=True, extension='xlsx', layoutFilter=''):
         try:
             asyncio.run(self.__readLinesAndProcessed(fileBytesIO, key, saveDatabase, extension, layoutFilter))
         except Exception as e:

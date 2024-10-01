@@ -23,6 +23,7 @@ data/
 .serverless
 
 node_modules/
+tmp/
 
 *.xlsx
 *.xls

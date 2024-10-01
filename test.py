@@ -1,21 +1,29 @@
-from src.functions import readExcelPandas, readCsv, readPdf
+from src.functions import readExcelPandas, readCsv, readPdf, pdfToExcel
 from src.read_lines_and_processed import ReadLinesAndProcessed
 from dotenv import load_dotenv
 import io
 import pandas
 import xlrd
+# import tabula
 import pandas as pd
 load_dotenv()
 
-pathFile = 'data/t35.csv'
+pathFile = 'data/t40.xlsx'
 extension = pathFile.split('.')[1].lower()
 file = open(pathFile, 'rb')
 fileContent = file.read()
 fileBytesIO = io.BytesIO(fileContent)
-ReadLinesAndProcessed().executeJobMainAsync(fileBytesIO, '959762c6-ba6c-4/9d47c2c9-90fe-4644-a333-26367e1d2400/ABC', False, extension, '')
 
 
-# tabula.convert_into(pathFile, output_path='data/t23.tsv', stream=True, pages='all', output_format='tsv')
+ReadLinesAndProcessed().executeJobMainAsync(fileBytesIO, 'c86f99be-623f-4/33137941-c9b6-4bf8-a040-dbdcf7dce9f5/ABC', False, extension, '')
+
+# dataPdf = readPdf(fileBytesIO)
+# with open(pathFile.replace('.pdf', '.txt'), 'w') as f:
+#     for line in dataPdf:
+#         f.write(f"{line}\n")
+
+# pdfToExcel(pathFile, pathFile.replace('.pdf', '.xlsx'))
+
 # print(data)
 # 4904e452-9b2c-4/ed5792c9-d944-4dff-bbf1-b4a97af1409f -> ultra
 # 97338620-6e04-4/8ecc4b70-3470-4fb9-90a6-2d6f126bf0fd/ABC -> wise contabilidade

@@ -29,7 +29,7 @@ def updateAmountMovementIfNegative(valuesOfLine: Dict[str, Any], existTypeMovime
             elif typeMoviment == 'ID':
                 valuesOfLine['typeMoviment'] = 'INFORMATIVA DEDUTORA'
 
-        if typeMoviment in ('D', 'DEB', 'SAI', 'PAG', 'PRO', 'P'):
+        if typeMoviment in ('D', 'DEB', 'SAI', 'PAG', 'PRO', 'P', 'I'):
             if amountPaidOrReceived > 0:
                 valuesOfLine['amountPaidOrReceived'] = amountPaidOrReceived * -1
     return valuesOfLine

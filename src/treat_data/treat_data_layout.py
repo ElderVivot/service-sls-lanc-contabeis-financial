@@ -28,8 +28,8 @@ def identifiesTheLineThatTheDataIs(lineThatTheDataIs, data: Dict[str, Any], data
     countValidationsConfigured = 0
 
     for key, validation in enumerate(line['validations']):
-        positionInFile = int(returnDataInDictOrArray(validation, ['positionInFile'], -1))
-        positionInFileEnd = returnDataInDictOrArray(validation, ['positionInFileEnd'], -1)
+        positionInFile = treatNumberField(returnDataInDictOrArray(validation, ['positionInFile'], 0), isInt=True, replaceHifen=False)
+        positionInFileEnd = treatNumberField(returnDataInDictOrArray(validation, ['positionInFileEnd'], 0), isInt=True, replaceHifen=False)
         typeValidation = returnDataInDictOrArray(validation, ['typeValidation'])
         valueValidation = treatTextField(returnDataInDictOrArray(validation, ['valueValidation']))
         nextValidationOrAnd = returnDataInDictOrArray(validation, ['nextValidationOrAnd'], 'and')
@@ -70,7 +70,8 @@ def identifiesTheLineThatTheDataIs(lineThatTheDataIs, data: Dict[str, Any], data
 
 
 def treatDataLayout(data: Dict[str, Any], settingFields: Dict[str, Any], positionsOfHeader,
-                    dataSetting: Dict[str, Any], readOnlyIfLineBelowTheMain=False, fileType='excel'):
+                    dataSetting: Dict[str, Any], readOnlyIfLineBelowTheMain=False, fileType='excel', splitFilePDFBySpace=False,
+                    charsToSplitBySpace='  '):
     # o readOnlyIfLineBelowTheMain serve pra ler as linhas que estão uma abaixo da principal, pra poder agrupar com a linha anterior
     valuesOfLine: Dict[str, Any] = {}
     positionsOfHeaderCorrect = positionsOfHeader
@@ -78,18 +79,44 @@ def treatDataLayout(data: Dict[str, Any], settingFields: Dict[str, Any], positio
     for settingField in settingFields:
         nameField: str = returnDataInDictOrArray(settingField, ['nameField', 'value'])
 
-        positionInFile = int(returnDataInDictOrArray(settingField, ['positionInFile'], -1))
-        positionInFile = positionInFile - 1 if fileType == 'txt' else positionInFile
-        positionInFileEnd = treatNumberField(returnDataInDictOrArray(settingField, ['positionInFileEnd'], -1), isInt=True)
+        positionInFile = treatNumberField(returnDataInDictOrArray(settingField, ['positionInFile'], 0), isInt=True, replaceHifen=False)
+        positionInFileEnd = treatNumberField(returnDataInDictOrArray(settingField, ['positionInFileEnd'], 0), isInt=True, replaceHifen=False)
 
         nameColumn = treatTextField(returnDataInDictOrArray(settingField, ['nameColumn']))
         nameColumn = None if nameColumn == "" else nameColumn
+
+        positionStartFindWord = treatTextField(returnDataInDictOrArray(settingField, ['positionStartFindWord']))
+        positionStartFindWord = 0 if positionStartFindWord == "" else data.find(positionStartFindWord) + len(positionStartFindWord)
+
+        positionEndFindWord = treatTextField(returnDataInDictOrArray(settingField, ['positionEndFindWord']))
+        positionEndFindWord = -1 if positionEndFindWord == "" else data.find(positionEndFindWord)
+
+        dataToSearch = data
+        if fileType in ('txt', 'pdf') and (positionStartFindWord > 0 or positionEndFindWord > 0):
+            if positionEndFindWord == -1:
+                dataToSearch = data[positionStartFindWord:]
+            else:
+                dataToSearch = data[positionStartFindWord:positionEndFindWord]
+
+            if positionStartFindWord > 0:
+                positionInFile = 1
+            if positionEndFindWord > 0:
+                positionInFileEnd = len(dataToSearch) + 1
+
+        if fileType in ('txt', 'pdf'):
+            dataToSearch = charsToSplitBySpace[:-1] + dataToSearch  # add a space blank because to return data begins 1
+
+        if fileType in ('txt', 'pdf') and splitFilePDFBySpace is True:
+            dataToSearch = dataToSearch.split(charsToSplitBySpace[:-1])
+
+        if positionInFileEnd != 0:
+            positionInFileEnd = positionInFileEnd + 1
 
         # esta row é apenas pra identificar se a informação está na linha principal ou não, caso não esteja, vai guardar seu valor
         # na self._fieldsRowNotMain pra serem utilizados na linha principal depois
         lineThatTheDataIs = returnDataInDictOrArray(settingField, ['lineThatTheDataIs'], '')
         if lineThatTheDataIs != "":
-            dataLine = identifiesTheLineThatTheDataIs(lineThatTheDataIs, data, dataSetting)
+            dataLine = identifiesTheLineThatTheDataIs(lineThatTheDataIs, dataToSearch, dataSetting)
             isRowCorrect = dataLine['isRowCorrect']
             informationIsOnOneLineBelowTheMain = dataLine['informationIsOnOneLineBelowTheMain']
         else:
@@ -116,15 +143,16 @@ def treatDataLayout(data: Dict[str, Any], settingFields: Dict[str, Any], positio
             continue
 
         splitField = returnDataInDictOrArray(settingField, ['splitField'])
-        positionFieldInTheSplit = treatNumberField(returnDataInDictOrArray(settingField, ['positionFieldInTheSplit'], 0), isInt=True)
-        positionFieldInTheSplitEnd = treatNumberField(returnDataInDictOrArray(settingField, ['positionFieldInTheSplitEnd'], 0), isInt=True)  # o zero determina que não tem fim, é daquele campo pra frente
+        positionFieldInTheSplit = treatNumberField(returnDataInDictOrArray(settingField, ['positionFieldInTheSplit'], 0), isInt=True, replaceHifen=False)
+        positionFieldInTheSplitEnd = treatNumberField(returnDataInDictOrArray(settingField, ['positionFieldInTheSplitEnd'], 0),
+                                                      isInt=True, replaceHifen=False)  # o zero determina que não tem fim, é daquele campo pra frente
 
         getByNameTab = False
         if positionInFile == -10:
             positionInFile = 0
             getByNameTab = True
-        valueField = treatTextFieldInVector(data, positionInFile, positionsOfHeaderCorrect, nameColumn, positionInFileEnd=positionInFileEnd, fileType=fileType)
-        valueField = "" if positionInFile <= 0 and getByNameTab is False and nameColumn is None else valueField
+        valueField = treatTextFieldInVector(dataToSearch, positionInFile, positionsOfHeaderCorrect, nameColumn, positionInFileEnd=positionInFileEnd, fileType=fileType)
+        valueField = "" if positionInFile == 0 and getByNameTab is False and nameColumn is None else valueField
         # if getByNameTab is True:
         #     print(valueField)
 
@@ -161,16 +189,16 @@ def treatDataLayout(data: Dict[str, Any], settingFields: Dict[str, Any], positio
             if splitField != "":
                 valueField = treatDateField(valueField, formatDate)
             else:
-                valueField = treatDateFieldInVector(data, positionInFile, positionsOfHeaderCorrect, nameColumn, formatDate, rowIsMain, positionInFileEnd=positionInFileEnd, fileType=fileType)
-                valueField = None if positionInFile <= 0 and nameColumn is None else valueField
+                valueField = treatDateFieldInVector(dataToSearch, positionInFile, positionsOfHeaderCorrect, nameColumn, formatDate, rowIsMain, positionInFileEnd=positionInFileEnd, fileType=fileType)
+                valueField = None if positionInFile == 0 and nameColumn is None else valueField
 
         elif nameField.lower().find('amount') >= 0:
             if splitField != "":
                 valueField = treatDecimalField(valueField)
             else:
                 valueFieldOriginal = valueField
-                valueField = treatDecimalFieldInVector(data, positionInFile, positionsOfHeaderCorrect, nameColumn, positionInFileEnd=positionInFileEnd, fileType=fileType)
-                valueField = 0 if positionInFile <= 0 and nameColumn is None else round(valueField, 2)
+                valueField = treatDecimalFieldInVector(dataToSearch, positionInFile, positionsOfHeaderCorrect, nameColumn, positionInFileEnd=positionInFileEnd, fileType=fileType)
+                valueField = 0 if positionInFile == 0 and nameColumn is None else round(valueField, 2)
                 try:
                     if valueFieldOriginal[-1] == 'D':
                         valueField *= -1

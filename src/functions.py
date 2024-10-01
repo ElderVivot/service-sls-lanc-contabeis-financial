@@ -6,6 +6,7 @@ except ImportError:
 try:
     import io
     import fitz
+    # import tabula
     import unicodedata
     import logging
     import re
@@ -22,10 +23,10 @@ except Exception as e:
 logger = logging.getLogger(__name__)
 
 
-def minimalizeSpaces(text: str):
+def minimalizeSpaces(text: str, charsSpaceReplace='  '):
     _result = text
-    while ("  " in _result):
-        _result = _result.replace("  ", " ")
+    while (charsSpaceReplace in _result):
+        _result = _result.replace(charsSpaceReplace, charsSpaceReplace[:-1])
     _result = _result.strip()
     return _result
 
@@ -50,13 +51,16 @@ def searchPositionFieldForName(header, nameField=''):
 def analyzeIfFieldHasPositionInFileEnd(data, positionInFile, positionInFileEnd):
     positionInFile = int(positionInFile)
     positionInFileEnd = int(positionInFileEnd)
+    charToJoin = ''
+    if str(type(data)).find('list') >= 0:
+        charToJoin = ' '
     try:
-        if positionInFileEnd <= 0:
+        if positionInFileEnd == 0:
             return data[positionInFile]
         else:
-            return ''.join(data[positionInFile:positionInFileEnd])
+            return charToJoin.join(data[positionInFile:positionInFileEnd])
     except Exception as e:
-        print(e)
+        # print(e, data, positionInFile, positionInFileEnd)
         return ""
 
 
@@ -271,11 +275,13 @@ def treatTextFieldInVector(data, numberOfField=0, fieldsHeader=[], nameFieldHead
             return ""
 
 
-def treatNumberField(value, isInt=False):
+def treatNumberField(value, isInt=False, replaceHifen=True):
     if type(value) == int or str(type(value)).find('numpy.int') >= 0:
         return value
     try:
-        value = re.sub("[^0-9]", '', value)
+        value = re.sub("[^0-9-]", '', value)
+        if replaceHifen is True:
+            value = value.replace('-', '')
         if value == "":
             return 0
         else:
@@ -588,7 +594,7 @@ def readXlsWithBeautifulSoup(fileBytesIO):
     return listOfDataAllRows
 
 
-def readTxt(fileBytesIO, minimalizeSpace=True, ignoreLineBlanks=False, dataAsByte=True):
+def readTxt(fileBytesIO, minimalizeSpace=True, ignoreLineBlanks=False, dataAsByte=True, charsSpaceReplace=' '):
     newDataDoc = []
 
     if dataAsByte is True:
@@ -604,6 +610,8 @@ def readTxt(fileBytesIO, minimalizeSpace=True, ignoreLineBlanks=False, dataAsByt
     for line in bytesIODecode.split('\n'):
         try:
             dataValue = treatTextField(line, minimalizeSpace)
+            if minimalizeSpace is False:
+                dataValue = minimalizeSpaces(dataValue, charsSpaceReplace)
             if ignoreLineBlanks is True and treatTextField(dataValue) == "":
                 continue
             numberLine += 1
@@ -659,3 +667,13 @@ def readPdf(fileBytesIO):
                     positionTextBefore = positionText
 
     return dataLines
+
+
+def pdfToExcel(pdf_file_path, excel_file_path):
+    pass
+    # tables = tabula.read_pdf(pdf_file_path, pages='all')
+
+    # # Write each table to a separate sheet in the Excel file
+    # with pandas.ExcelWriter(excel_file_path) as writer:
+    #     for i, table in enumerate(tables):
+    #         table.to_excel(writer, sheet_name=f'Sheet{i+1}')

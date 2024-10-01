@@ -785,6 +785,16 @@ test = ["hypothesis (>=6.46.1)", "pytest (>=7.3.2)", "pytest-xdist (>=2.2.0)"]
 xml = ["lxml (>=4.9.2)"]
 
 [[package]]
+name = "pdftotext"
+version = "2.2.2"
+description = "Simple PDF text extraction"
+optional = false
+python-versions = "*"
+files = [
+    {file = "pdftotext-2.2.2.tar.gz", hash = "sha256:2a9aa89bc62022408781b39d188fabf5a3ad1103b6630f32c4e27e395f7966ee"},
+]
+
+[[package]]
 name = "pycodestyle"
 version = "2.11.1"
 description = "Python style guide checker"
@@ -1169,4 +1179,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "8335724599401217dd8eb8047d5f51139f3eac0d0959aabc76a9aa2539bad435"
+content-hash = "63d8106c327e7b8726430796b96861e256acc4f59aff92c69caf75da127726a6"
