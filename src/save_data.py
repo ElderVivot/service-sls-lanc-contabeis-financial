@@ -8,6 +8,7 @@ try:
     import os
     import gzip
     import base64
+    import sys
     from aiohttp import ClientSession
     from typing import Dict, Any, List
     import json
@@ -24,6 +25,9 @@ class SaveData(object):
         self.__dataToSave = dataToSave
         self.__zipData = zipData
 
+        self.__dataToSave['startPeriod'] = formatDate(self.__dataToSave['startPeriod'])
+        self.__dataToSave['endPeriod'] = formatDate(self.__dataToSave['endPeriod'])
+
     async def __put(self, session: ClientSession, url: str, data: Any, headers: Dict[str, str]):
         async with session.put(url, json=data, headers=headers) as response:
             data = await response.json()
@@ -36,8 +40,6 @@ class SaveData(object):
 
     async def saveData(self, ):
         try:
-            self.__dataToSave['startPeriod'] = formatDate(self.__dataToSave['startPeriod'])
-            self.__dataToSave['endPeriod'] = formatDate(self.__dataToSave['endPeriod'])
             response = None
 
             lenghtData = len(self.__dataToSave['lancs'])
@@ -92,6 +94,19 @@ class SaveData(object):
             self.__dataToSave['messageLogToShowUser'] = 'Erro ao salvar resultado do processamento'
 
             await self.__saveDataApiRelational('put')
+
+    async def saveLocal(self):
+        dataBytes = bytes(json.dumps(self.__dataToSave), 'utf-8')
+        dataEncoded = base64.b64encode(dataBytes)
+        dataCompress = gzip.compress(dataBytes)
+
+        print(sys.getsizeof(dataCompress), sys.getsizeof(dataEncoded), sys.getsizeof(dataBytes), len(self.__dataToSave['lancs']))
+
+        jsonData = json.dumps(self.__dataToSave, indent=4)
+        # jsonData = json.dumps({"data": dataEncoded.decode()}, indent=4)
+        # jsonData = json.dumps(dataCompress, indent=4)
+        with open('data/_dataToSave.json', 'w') as outfile:
+            outfile.write(jsonData)
 
     async def __saveDataApiRelational(self, typeSave):
         try:

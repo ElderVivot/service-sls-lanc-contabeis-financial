@@ -594,7 +594,7 @@ def readXlsWithBeautifulSoup(fileBytesIO):
     return listOfDataAllRows
 
 
-def readTxt(fileBytesIO, minimalizeSpace=True, ignoreLineBlanks=False, dataAsByte=True, charsSpaceReplace=' '):
+def readTxt(fileBytesIO, minimalizeSpace=True, ignoreLineBlanks=False, dataAsByte=True, charsSpaceReplace='  '):
     newDataDoc = []
 
     if dataAsByte is True:

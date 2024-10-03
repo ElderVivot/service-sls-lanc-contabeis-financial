@@ -1,5 +1,6 @@
 from src.functions import readExcelPandas, readCsv, readPdf, pdfToExcel
 from src.read_lines_and_processed import ReadLinesAndProcessed
+from src.custom_layouts.read_lines_and_processed import ReadLinesAndProcessedCustomLayouts
 from dotenv import load_dotenv
 import io
 import pandas
@@ -8,14 +9,15 @@ import xlrd
 import pandas as pd
 load_dotenv()
 
-pathFile = 'data/t40.xlsx'
+pathFile = 'data/t37.pdf'
 extension = pathFile.split('.')[1].lower()
 file = open(pathFile, 'rb')
 fileContent = file.read()
 fileBytesIO = io.BytesIO(fileContent)
 
 
-ReadLinesAndProcessed().executeJobMainAsync(fileBytesIO, 'c86f99be-623f-4/33137941-c9b6-4bf8-a040-dbdcf7dce9f5/ABC', False, extension, '')
+# ReadLinesAndProcessed().executeJobMainAsync(fileBytesIO, 'c86f99be-623f-4/33137941-c9b6-4bf8-a040-dbdcf7dce9f5/ABC', False, extension, '')
+ReadLinesAndProcessedCustomLayouts(fileBytesIO, '', 'pdf', 'L00001').executeJobMainAsync()
 
 # dataPdf = readPdf(fileBytesIO)
 # with open(pathFile.replace('.pdf', '.txt'), 'w') as f:
