@@ -13,6 +13,7 @@ try:
         treatDecimalField, formatDate, treatNumberField
     from src.save_data import SaveData
     from src.custom_layouts.update_values_fields_to_save import updateValuesFieldsToSave
+    from src.treat_data.check_columns_that_have_value import getListColumnsThatHaveValue
 except Exception as e:
     print(f"Error importing libraries {e}")
 
@@ -88,6 +89,7 @@ class L00001PdfEmailNutronordeste(object):
                             valuesOfLine = updateValuesFieldsToSave(valuesOfLine)
 
                             self.__dataToSave['lancs'].append(valuesOfLine.copy())
+                            self.__dataToSave["listOfColumnsThatHaveValue"] = getListColumnsThatHaveValue(self.__dataToSave["listOfColumnsThatHaveValue"], valuesOfLine)
 
                             valuesOfLine = self.__setDefaultValuesOfLine()
 

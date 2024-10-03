@@ -20,7 +20,9 @@ def updateValuesFieldsToSave(valuesOfLine: Dict[str, Any]):
     else:
         valuesOfLine['amountMoviment'] = amountReceived if amountReceived > 0 else amountPaid * -1
 
-    valuesOfLine['paymentDate'] = formatDate(returnDataInDictOrArray(valuesOfLine, ['paymentDate']), '%d/%m/%Y')
+    paymentDate = returnDataInDictOrArray(valuesOfLine, ['paymentDate'])
+    valuesOfLine['paymentDate'] = formatDate(paymentDate, '%d/%m/%Y')
+    valuesOfLine['paymentDateAsDate'] = formatDate(paymentDate, '%Y%m%d')
     valuesOfLine['dueDate'] = formatDate(returnDataInDictOrArray(valuesOfLine, ['dueDate']), '%d/%m/%Y')
     valuesOfLine['issueDate'] = formatDate(returnDataInDictOrArray(valuesOfLine, ['issueDate']), '%d/%m/%Y')
 

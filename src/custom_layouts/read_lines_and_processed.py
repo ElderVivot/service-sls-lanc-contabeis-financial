@@ -9,10 +9,12 @@ try:
     import asyncio
     import datetime
     import logging
+    from operator import itemgetter
     from typing import Dict, Any, List
     from src.custom_layouts.l_00001_pdf_email_nutronordeste import L00001PdfEmailNutronordeste
+    from src.treat_data.check_columns_that_have_value import getListColumnsThatHaveValue
     from src.convert_txt import ConvertTxt
-    from src.functions import formatDate, readTxt
+    from src.functions import removeAnArrayFromWithinAnother, readTxt
     from src.save_data import SaveData
 except Exception as e:
     print(f"Error importing libraries {e}")
@@ -72,6 +74,9 @@ class ReadLinesAndProcessedCustomLayouts(object):
 
             if self.__layout[0:6] == 'L00001':
                 self.__dataToSave = await L00001PdfEmailNutronordeste(self.__dataToSave, dataFile).processAsync()
+
+            # self.__dataToSave["lancs"] = removeAnArrayFromWithinAnother(self.__dataToSave["lancs"])
+            # self.__dataToSave['lancs'] = sorted(self.__dataToSave['lancs'], key=itemgetter('paymentDateAsDate'))
 
             if len(self.__dataToSave['lancs']) > 0:
                 self.__dataToSave['typeLog'] = 'success'
