@@ -11,10 +11,12 @@ try:
     import logging
     from operator import itemgetter
     from typing import Dict, Any, List
+    from src.get_layout import GetLayout
     from src.custom_layouts.l_00001_pdf_email_nutronordeste import L00001PdfEmailNutronordeste
+    from src.custom_layouts.l_00002_pdf_omnie_extrato_conciliado import L00002PdfOminieExtratoConciliado
     from src.treat_data.check_columns_that_have_value import getListColumnsThatHaveValue
     from src.convert_txt import ConvertTxt
-    from src.functions import removeAnArrayFromWithinAnother, readTxt
+    from src.functions import removeAnArrayFromWithinAnother, readTxt, returnDataInDictOrArray, treatTextField, treatNumberField
     from src.save_data import SaveData
 except Exception as e:
     print(f"Error importing libraries {e}")
@@ -38,6 +40,8 @@ class ReadLinesAndProcessedCustomLayouts(object):
         self.__dataToSave["tenant"] = self.__getTenant(key)
         self.__dataToSave["idCompanie"] = self.__getIdCompanie(key)
 
+        self.__historicComposition = ''
+
     def __getTenant(self, key: str):
         try:
             return key.split("/")[0]
@@ -56,6 +60,48 @@ class ReadLinesAndProcessedCustomLayouts(object):
         except Exception:
             return key
 
+    def __generateDataSettingInitial(self):
+        return {
+            "fieldsRowNotMain": {},
+            "groupingFields": {},
+            "groupingLancsByFields": {},
+            "linesOfFile": [],
+            "considerToCheckIfItIsDuplicatedFields": {},
+            "fieldsThatMultiplePerLessOne": {},
+            "validationsLineToPrint": [],
+            "linesToIgnore": [],
+            "sumInterestFineAndDiscount": False,
+            "calcDifferencePaidOriginalAsInterestDiscount": False,
+            "validateIfCnpjOrCpfIsValid": False,
+            "negativeIsAmountPaid": False,
+            "positiveIsAmountReceived": False,
+        }
+
+    async def __getHistoricComposition(self):
+        getLayout = GetLayout()
+        settingsLayout = await getLayout.getDataCompanieXSettingLayout(self.__dataToSave["idCompanie"])
+        settingsLayout = returnDataInDictOrArray(settingsLayout, ["Item"], None)
+        if settingsLayout is None:
+            raise Exception('DONT_EXIST_LAYOUT_THIS_COMPANIE')
+        layouts = settingsLayout["layoutsFinancial"]
+
+        for layout in layouts:
+            try:
+                layoutData = await getLayout.getDataSettingLayout(layout["idLayout"])
+                layoutData = returnDataInDictOrArray(layoutData, ["Item"], None)
+                if layoutData is None:
+                    print(f"Layout com ID {layout['idLayout']} não encontrado")
+                    raise Exception('LAYOUT_DELETED')
+
+                nameLayout = treatTextField(layoutData['system'])
+                if self.__layout not in ('', 'all', 'ALL') and nameLayout.find(self.__layout[0:6]) >= 0:
+                    break
+
+                self.__historicComposition = treatTextField(returnDataInDictOrArray(layoutData, ["historicComposition"]))
+
+            except Exception:
+                pass
+
     async def __readLinesAndProcessed(self):
         dateTimeNow = datetime.datetime.now()
         miliSecondsThreeChars = dateTimeNow.strftime("%f")[0:3]
@@ -72,11 +118,15 @@ class ReadLinesAndProcessedCustomLayouts(object):
                 pdfResult = convertTxt.pdfToText(self.__fileData)
                 dataFile = readTxt(pdfResult, dataAsByte=False, minimalizeSpace=False)
 
+            await self.__getHistoricComposition()
+
             if self.__layout[0:6] == 'L00001':
                 self.__dataToSave = await L00001PdfEmailNutronordeste(self.__dataToSave, dataFile).processAsync()
+            elif self.__layout[0:6] == 'L00002':
+                self.__dataToSave = await L00002PdfOminieExtratoConciliado(self.__dataToSave, self.__fileData, self.__historicComposition).processAsync()
 
             # self.__dataToSave["lancs"] = removeAnArrayFromWithinAnother(self.__dataToSave["lancs"])
-            # self.__dataToSave['lancs'] = sorted(self.__dataToSave['lancs'], key=itemgetter('paymentDateAsDate'))
+            self.__dataToSave['lancs'] = sorted(self.__dataToSave['lancs'], key=itemgetter('paymentDateAsDate'))
 
             if len(self.__dataToSave['lancs']) > 0:
                 self.__dataToSave['typeLog'] = 'success'

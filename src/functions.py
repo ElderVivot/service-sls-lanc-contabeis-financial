@@ -39,6 +39,13 @@ def removeCharSpecials(text: str):
     return re.sub('[^a-zA-Z0-9.!+:>;<=[\])|?$(/*,\-_ \\\]', '', textFormated)
 
 
+def removeCharSpecials2(text: str):
+    nfkd = unicodedata.normalize('NFKD', text).encode(
+        'ASCII', 'ignore').decode('ASCII')
+    textFormated = u"".join([c for c in nfkd if not unicodedata.combining(c)])
+    return re.sub('[^a-zA-Z0-9.]!+:><=[)|?$(/*,\-_\n\r \\\]', '', textFormated)
+
+
 def searchPositionFieldForName(header, nameField=''):
     nameField = treatTextField(nameField)
     try:
@@ -164,6 +171,7 @@ def treatDateField(valorCampo, formatoData=1):
 
     lengthField = 10  # tamanho padrão da data são 10 caracteres, só muda se não tiver os separados de dia, mês e ano
 
+    formatoDataStr = "%d/%m/%Y"
     if formatoData == 1:
         formatoDataStr = "%d/%m/%Y"
     elif formatoData == 2:
@@ -225,10 +233,13 @@ def treatDateFieldInVector(data, numberOfField=0, fieldsHeader=[], nameFieldHead
             return None
 
 
-def treatTextField(value: str, minimalizeSpace=True):
+def treatTextField(value: str, minimalizeSpace=True, optionRemove=1):
     value = str(value)
     try:
-        value = removeCharSpecials(value.upper())
+        if optionRemove == 1:
+            value = removeCharSpecials(value.upper())
+        else:
+            value = removeCharSpecials2(value.upper())
         value = value.replace('−', '-')
         if minimalizeSpace is True:
             value = minimalizeSpaces(value.strip())
