@@ -621,7 +621,7 @@ def readTxt(fileBytesIO, minimalizeSpace=True, ignoreLineBlanks=False, dataAsByt
     for line in bytesIODecode.split('\n'):
         try:
             dataValue = treatTextField(line, minimalizeSpace)
-            if minimalizeSpace is False:
+            if minimalizeSpace is True:
                 dataValue = minimalizeSpaces(dataValue, charsSpaceReplace)
             if ignoreLineBlanks is True and treatTextField(dataValue) == "":
                 continue

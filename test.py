@@ -9,15 +9,15 @@ import xlrd
 import pandas as pd
 load_dotenv()
 
-pathFile = 'data/t37.pdf'
+pathFile = 'data/t41.pdf'
 extension = pathFile.split('.')[1].lower()
 file = open(pathFile, 'rb')
 fileContent = file.read()
 fileBytesIO = io.BytesIO(fileContent)
 
 
-# ReadLinesAndProcessed().executeJobMainAsync(fileBytesIO, 'c86f99be-623f-4/33137941-c9b6-4bf8-a040-dbdcf7dce9f5/ABC', False, extension, '')
-ReadLinesAndProcessedCustomLayouts(fileBytesIO, '', 'pdf', 'L00001').executeJobMainAsync()
+# ReadLinesAndProcessed().executeJobMainAsync(fileBytesIO, 'ffa680d3-3b4e-4/34e021e4-4aa8-4a76-b8cb-159243195509/ABC', False, extension, 'ARQUIVO DO SSWWEB DIRETO')
+ReadLinesAndProcessedCustomLayouts(fileBytesIO, '', 'pdf', 'L00002').executeJobMainAsync()
 
 # dataPdf = readPdf(fileBytesIO)
 # with open(pathFile.replace('.pdf', '.txt'), 'w') as f:

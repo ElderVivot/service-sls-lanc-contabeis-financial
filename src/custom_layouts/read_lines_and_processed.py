@@ -60,47 +60,33 @@ class ReadLinesAndProcessedCustomLayouts(object):
         except Exception:
             return key
 
-    def __generateDataSettingInitial(self):
-        return {
-            "fieldsRowNotMain": {},
-            "groupingFields": {},
-            "groupingLancsByFields": {},
-            "linesOfFile": [],
-            "considerToCheckIfItIsDuplicatedFields": {},
-            "fieldsThatMultiplePerLessOne": {},
-            "validationsLineToPrint": [],
-            "linesToIgnore": [],
-            "sumInterestFineAndDiscount": False,
-            "calcDifferencePaidOriginalAsInterestDiscount": False,
-            "validateIfCnpjOrCpfIsValid": False,
-            "negativeIsAmountPaid": False,
-            "positiveIsAmountReceived": False,
-        }
-
     async def __getHistoricComposition(self):
-        getLayout = GetLayout()
-        settingsLayout = await getLayout.getDataCompanieXSettingLayout(self.__dataToSave["idCompanie"])
-        settingsLayout = returnDataInDictOrArray(settingsLayout, ["Item"], None)
-        if settingsLayout is None:
-            raise Exception('DONT_EXIST_LAYOUT_THIS_COMPANIE')
-        layouts = settingsLayout["layoutsFinancial"]
+        try:
+            getLayout = GetLayout()
+            settingsLayout = await getLayout.getDataCompanieXSettingLayout(self.__dataToSave["idCompanie"])
+            settingsLayout = returnDataInDictOrArray(settingsLayout, ["Item"], None)
+            if settingsLayout is None:
+                raise Exception('DONT_EXIST_LAYOUT_THIS_COMPANIE')
+            layouts = settingsLayout["layoutsFinancial"]
 
-        for layout in layouts:
-            try:
-                layoutData = await getLayout.getDataSettingLayout(layout["idLayout"])
-                layoutData = returnDataInDictOrArray(layoutData, ["Item"], None)
-                if layoutData is None:
-                    print(f"Layout com ID {layout['idLayout']} não encontrado")
-                    raise Exception('LAYOUT_DELETED')
+            for layout in layouts:
+                try:
+                    layoutData = await getLayout.getDataSettingLayout(layout["idLayout"])
+                    layoutData = returnDataInDictOrArray(layoutData, ["Item"], None)
+                    if layoutData is None:
+                        print(f"Layout com ID {layout['idLayout']} não encontrado")
+                        raise Exception('LAYOUT_DELETED')
 
-                nameLayout = treatTextField(layoutData['system'])
-                if self.__layout not in ('', 'all', 'ALL') and nameLayout.find(self.__layout[0:6]) >= 0:
-                    break
+                    nameLayout = treatTextField(layoutData['system'])
+                    if self.__layout not in ('', 'all', 'ALL') and nameLayout.find(self.__layout[0:6]) >= 0:
+                        break
 
-                self.__historicComposition = treatTextField(returnDataInDictOrArray(layoutData, ["historicComposition"]))
+                    self.__historicComposition = treatTextField(returnDataInDictOrArray(layoutData, ["historicComposition"]))
 
-            except Exception:
-                pass
+                except Exception:
+                    pass
+        except Exception:
+            pass
 
     async def __readLinesAndProcessed(self):
         dateTimeNow = datetime.datetime.now()
@@ -116,7 +102,7 @@ class ReadLinesAndProcessedCustomLayouts(object):
             if self.__extension == 'pdf':
                 convertTxt = ConvertTxt()
                 pdfResult = convertTxt.pdfToText(self.__fileData)
-                dataFile = readTxt(pdfResult, dataAsByte=False, minimalizeSpace=False)
+                dataFile = readTxt(pdfResult, dataAsByte=False, minimalizeSpace=True)
 
             await self.__getHistoricComposition()
 
