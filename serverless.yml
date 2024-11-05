@@ -11,7 +11,7 @@ provider:
     contabil: "Module Contabil"
     lanc-financial: "Lanc Financial"
   region: us-east-2
-  memorySize: 512
+  memorySize: 1024
   timeout: 120
   environment:
     AWS_S3_ACCESS_KEY_ID: ${file(./env.json):AWS_S3_ACCESS_KEY_ID}
