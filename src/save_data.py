@@ -65,6 +65,8 @@ class SaveData(object):
                     dataCompress = gzip.compress(dataBytes)
                     dataEncoded = base64.b64encode(dataCompress)
 
+                    print(sys.getsizeof(dataCompress), sys.getsizeof(dataEncoded), sys.getsizeof(dataBytes), len(self.__dataToSave['lancs']))
+
                     response, statusCode = await self.__put(
                         session,
                         f"{API_HOST_SERVERLESS}/lanc-contabeis-financial-zip",
@@ -100,7 +102,7 @@ class SaveData(object):
         dataEncoded = base64.b64encode(dataBytes)
         dataCompress = gzip.compress(dataBytes)
 
-        print(sys.getsizeof(dataCompress), sys.getsizeof(dataEncoded), sys.getsizeof(dataBytes), len(self.__dataToSave['lancs']))
+        print(sys.getsizeof(dataCompress), sys.getsizeof(dataEncoded) / 1024 / 1024, sys.getsizeof(dataBytes), len(self.__dataToSave['lancs']))
 
         jsonData = json.dumps(self.__dataToSave, indent=4)
         # jsonData = json.dumps({"data": dataEncoded.decode()}, indent=4)

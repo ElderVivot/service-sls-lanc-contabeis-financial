@@ -9,15 +9,15 @@ import xlrd
 import pandas as pd
 load_dotenv()
 
-pathFile = 'data/t41.pdf'
+pathFile = 'data/t43.xlsx'
 extension = pathFile.split('.')[1].lower()
 file = open(pathFile, 'rb')
 fileContent = file.read()
 fileBytesIO = io.BytesIO(fileContent)
 
 
-# ReadLinesAndProcessed().executeJobMainAsync(fileBytesIO, 'ffa680d3-3b4e-4/34e021e4-4aa8-4a76-b8cb-159243195509/ABC', False, extension, 'ARQUIVO DO SSWWEB DIRETO')
-ReadLinesAndProcessedCustomLayouts(fileBytesIO, '', 'pdf', 'L00002').executeJobMainAsync()
+ReadLinesAndProcessed().executeJobMainAsync(fileBytesIO, 'a2bf0240-7c92-4/a1c136a8-6785-4328-822b-923bb00e0daa', False, extension, 'Planilha Financeira IL FORNAIO - ITAU PAGAMENTO')
+# ReadLinesAndProcessedCustomLayouts(fileBytesIO, '', 'pdf', 'L00002').executeJobMainAsync()
 
 # dataPdf = readPdf(fileBytesIO)
 # with open(pathFile.replace('.pdf', '.txt'), 'w') as f:

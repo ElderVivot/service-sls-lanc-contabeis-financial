@@ -183,6 +183,7 @@ class ReadLinesAndProcessed(object):
                         charsToSplitBySpace = '  '
 
                     nameLayout = treatTextField(layoutData['system'])
+                    layoutFilter = treatTextField(layoutFilter)
                     if layoutFilter not in ('', 'all', 'ALL'):
                         if nameLayout.find(layoutFilter) < 0:
                             continue
@@ -217,7 +218,8 @@ class ReadLinesAndProcessed(object):
                         convertTxt = ConvertTxt()
                         pdfResult = convertTxt.pdfToText(fileBytesIO)
                         charsSpaceReplace = charsToSplitBySpace if len(charsToSplitBySpace) > 2 else '  '
-                        dataFile = readTxt(pdfResult, dataAsByte=False, minimalizeSpace=False, charsSpaceReplace=charsSpaceReplace)
+                        dataFile = readTxt(pdfResult, dataAsByte=False, minimalizeSpace=True, charsSpaceReplace=charsSpaceReplace)
+                        # print(dataFile)
                     else:
                         dataFile = []
 
@@ -304,25 +306,8 @@ class ReadLinesAndProcessed(object):
                 saveData = SaveData(self.__dataToSave)
                 await saveData.saveData()
             else:
-                import json
-                from src.functions import formatDate
-                import base64
-                import bz2
-                import sys
-                import gzip
-
-                self.__dataToSave["startPeriod"] = formatDate(self.__dataToSave["startPeriod"])
-                self.__dataToSave["endPeriod"] = formatDate(self.__dataToSave["endPeriod"])
-                jsonData = json.dumps(self.__dataToSave, indent=4)
-
-                dataBytes = bytes(json.dumps(self.__dataToSave), 'utf-8')
-                dataEncoded = base64.b64encode(dataBytes)
-                dataCompress = gzip.compress(dataBytes)
-                dataCompressBZ2 = bz2.compress(dataBytes)
-                print(sys.getsizeof(dataCompress), sys.getsizeof(dataEncoded), sys.getsizeof(dataBytes), sys.getsizeof(dataCompressBZ2), len(self.__dataToSave['lancs']))
-
-                with open("data/_dataToSave.json", "w") as outfile:
-                    outfile.write(jsonData)
+                saveData = SaveData(self.__dataToSave)
+                await saveData.saveLocal()
         except Exception as e:
             self.__dataToSave["typeLog"] = "error"
             self.__dataToSave["messageLog"] = str(e)
