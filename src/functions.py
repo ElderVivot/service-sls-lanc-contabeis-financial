@@ -440,6 +440,7 @@ def validateCNPJ(value):
 def identifiesAndTransformTypeDataOfSeriesPandas(data):
     newData = ''
     typeData = str(type(data))
+    print('---', typeData)
 
     if typeData.count('str') > 0:
         newData = treatTextField(data)
@@ -612,20 +613,17 @@ def readXlsWithBeautifulSoupOption2(fileBytesIO):
     fileBytesSTR = fileBytesIO.getvalue()
     soup = BeautifulSoup(fileBytesSTR, 'lxml')
 
-    table = soup.find('table')
-
-    dataFrame = pandas.read_html(str(table))[0]
-    dataFrameDropNa = dataFrame.dropna(how='all')
-    dataFrameFillNa = dataFrameDropNa.fillna('')
-    dataFrameToRecords = dataFrameFillNa.to_records(index=False)
-    for dataRow in dataFrameToRecords:
+    for row in soup.find_all('tr'):
+        dataOfRow = []
         dataOfRow.append('')
-        for data in dataRow:
-            newData = identifiesAndTransformTypeDataOfSeriesPandas(data)
-            dataOfRow.append(newData)
-
-        listOfDataAllRows.append(dataOfRow.copy())
-        dataOfRow.clear()
+        for cell in row.find_all(['td', 'th']):
+            valueFieldSdval = cell.get('sdval')
+            if valueFieldSdval is not None:
+                valueField = valueFieldSdval
+            else:
+                valueField = cell.get_text()
+            dataOfRow.append(valueField)
+        listOfDataAllRows.append(dataOfRow)
 
     return listOfDataAllRows
 
