@@ -12,7 +12,7 @@ try:
     from typing import Dict, Any, List
     from src.convert_txt import ConvertTxt
     from src.functions import readCsvAsTxt, readTxt, readExcelPandas, readPdf, returnDataInDictOrArray, removeAnArrayFromWithinAnother, \
-        treatTextField, readXlsWithBeautifulSoup, treatNumberField, minimalizeSpaces
+        treatTextField, readXlsWithBeautifulSoup, treatNumberField, minimalizeSpaces, readXlsWithBeautifulSoupOption2
     from src.get_layout import GetLayout
     from src.save_data import SaveData
     from src.treat_data.analyze_setting_fields import analyzeSettingFields
@@ -204,10 +204,14 @@ class ReadLinesAndProcessed(object):
                         dataFile = readExcelPandas(fileBytesIO)
                         if len(dataFile) == 0:
                             dataFile = readXlsWithBeautifulSoup(fileBytesIO)
+                        if len(dataFile) == 0:
+                            dataFile = readXlsWithBeautifulSoupOption2(fileBytesIO)
                     elif fileType == 'excel' and extension in ('xls'):
                         dataFile = readExcelPandas(fileBytesIO)
                         if len(dataFile) == 0:
                             dataFile = readXlsWithBeautifulSoup(fileBytesIO)
+                        if len(dataFile) == 0:
+                            dataFile = readXlsWithBeautifulSoupOption2(fileBytesIO)
                     elif fileType == 'csv' and extension in ('csv', 'txt'):
                         dataFile = readCsvAsTxt(fileBytesIO)
                     elif fileType == 'txt' and extension in ('txt', 'html'):

@@ -605,6 +605,31 @@ def readXlsWithBeautifulSoup(fileBytesIO):
     return listOfDataAllRows
 
 
+def readXlsWithBeautifulSoupOption2(fileBytesIO):
+    listOfDataAllRows = []
+    dataOfRow = []
+
+    fileBytesSTR = fileBytesIO.getvalue()
+    soup = BeautifulSoup(fileBytesSTR, 'lxml')
+
+    table = soup.find('table')
+
+    dataFrame = pandas.read_html(str(table))[0]
+    dataFrameDropNa = dataFrame.dropna(how='all')
+    dataFrameFillNa = dataFrameDropNa.fillna('')
+    dataFrameToRecords = dataFrameFillNa.to_records(index=False)
+    for dataRow in dataFrameToRecords:
+        dataOfRow.append('')
+        for data in dataRow:
+            newData = identifiesAndTransformTypeDataOfSeriesPandas(data)
+            dataOfRow.append(newData)
+
+        listOfDataAllRows.append(dataOfRow.copy())
+        dataOfRow.clear()
+
+    return listOfDataAllRows
+
+
 def readTxt(fileBytesIO, minimalizeSpace=True, ignoreLineBlanks=False, dataAsByte=True, charsSpaceReplace='  '):
     newDataDoc = []
 
